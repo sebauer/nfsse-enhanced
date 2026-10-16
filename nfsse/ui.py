@@ -1,6 +1,21 @@
 """Terminal output for the patcher: brew-style headings and a live progress block (bar, running jobs
 with their elapsed time). Without a terminal it falls back to plain lines; NO_COLOR disables colour."""
 import os,sys,time,shutil
+# title logo (ASCII only): rows 0-3 THE NEED, 4-7 FOR SPEED (+ SE from column 41), 8 SPECIAL EDITION, 9-12 ENHANCED
+LOGO=r"""
+       ________ ______  _  _____________        __________    ___________
+      /_  __/ // / __/ / |/ / __/ __/ _ \      / ________/   / _________/
+       / / / _  / _/  /    / _// _// // /     / /           / /
+      /_/ /_//_/___/ /_/|_/___/___/____/     / /________   / /______
+   ________  ___    _______  ___________    /________/ /  / _______/
+  / __/ __ \/ _ \  / __/ _ \/ __/ __/ _ \           / /  / /
+ / _// /_/ / , _/ _\ \/ ___/ _// _// // /    ______/ /  / /_________
+/_/  \____/_/|_| /___/_/  /___/___/____/    /_______/  /____________/
+         S  P  E  C  I  A  L    E  D  I  T  I  O  N
+                                   _____  ____ _____   _  ______________
+                                  / __/ |/ / // / _ | / |/ / ___/ __/ _ \
+                                 / _//    / _  / __ |/    / /__/ _// // /
+                                /___/_/|_/_//_/_/ |_/_/|_/\___/___/____/""".split('\n')[1:]
 class UI:
     def __init__(s,out=sys.stdout):
         s.o=out; s.live=out.isatty() and os.environ.get('TERM')!='dumb'
@@ -10,6 +25,13 @@ class UI:
         except (UnicodeError,LookupError): s.uni=False
     def c(s,code,t): return f'\x1b[{code}m{t}\x1b[0m' if s.color else t
     def p(s,t=''): print(t,file=s.o,flush=True)
+    def logo(s,sub):
+        if shutil.get_terminal_size((80,24)).columns<max(map(len,LOGO))+1: s.head('NFS SE Enhanced'); s.p('    '+sub); return
+        s.p()
+        for i,l in enumerate(LOGO):
+            if i<8: s.p(s.c('1;31' if i<4 else '1;33',l[:41])+s.c('1;97',l[41:]))
+            else: s.p(s.c('37' if i==8 else '1;36',l))
+        s.p(); s.p(s.c('2',f'{sub:>{max(map(len,LOGO))}}'))
     def head(s,t): s.p(s.c('1;34','==>')+' '+s.c('1',t))
     def info(s,k,v): s.p(f'    {k:<13}{v}')
     def ok(s,t): s.p(s.c('1;32','✔' if s.uni else 'OK')+' '+t)

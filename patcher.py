@@ -166,7 +166,8 @@ def main(argv=None):
     ap.add_argument('--keep-video-mode',action='store_true',help=argparse.SUPPRESS)   # do not normalise the CD EXE to 86f8
     a=ap.parse_args(argv)
     game=os.path.abspath(a.game); out=os.path.abspath(a.out) if a.out else game; res=sorted(set(a.res)); ui=UI()
-    ui.head(f'NFS SE Enhanced v{VERSION}')
+    ui.logo(f'v{VERSION} - hi-res patch for Need for Speed SE (DOS)'); ui.p()
+    ui.head('Checking your installation')
     try:
         load_deps()
         exe_bytes,variant=read_exe(game,a.keep_video_mode)
