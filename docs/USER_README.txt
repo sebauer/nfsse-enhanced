@@ -35,6 +35,9 @@ English and German installations are both supported (German uses the folders
 FRONTEND\GART and SIMDATA\GDASH, ...). The Windows 95 version (NFS_WIN.EXE)
 is not supported.
 
+The patch is tested mainly with DOSBox-X. Other DOSBox versions may work but
+are untested.
+
 [dosbox]
 machine                    = svga_s3     (default; needs an SVGA with VESA)
 memsize                    = 64          (1280x960 needs 64 MB: its cockpits are ~5 MB each;
@@ -46,9 +49,6 @@ vesa modelist width limit  = 1280
 vesa modelist height limit = 1024
 
 Why: 1280x960 is VESA mode 0x22B, which DOSBox-X only offers with these settings.
-
-The patch is tested mainly with DOSBox-X. Other DOSBox versions may work but
-are untested.
 1024x768 (mode 0x105) works with the default settings.
 
 [cpu]
