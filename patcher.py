@@ -8,6 +8,7 @@ import argparse,hashlib,os,sys,time
 sys.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__file__)),'nfsse'))
 from ui import UI,clock
 VERSION='0.9'
+REPO='https://github.com/sebauer/nfsse-enhanced'
 
 SHA_CD='7d2104a9eae01ca7b74807ab66334e3ce806d7a9ca3057a9f886932533c6f815'    # CD NFS_DOS.EXE = clean install
 SHA_86='86f80829727fd311387a69c55613a3332de4a2df27a350502d9bce1d1011df6a'    # variant all in-game tests used
@@ -183,7 +184,9 @@ def main(argv=None):
     if out!=game: ui.info('Output',out)
     t=time.time(); made=generate(J,w,ui)
     ui.ok(f'{len(made)} files written in {clock(time.time()-t)}, original files unchanged')
+    ui.p(); ui.p(ui.c('1;32','  Success! Your game is patched. Start your engines - let\'s race!')); ui.p()
     notes(ui,res)
+    ui.p(); ui.p(f'  Questions, problems or feedback? Visit {ui.c("1;4",REPO)}'); ui.p()
     return 0
 
 if __name__=='__main__': sys.exit(main())
