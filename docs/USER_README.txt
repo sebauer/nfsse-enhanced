@@ -15,11 +15,38 @@ Runs the race in 1024x768 or 1280x960 instead of 640x480. The original NFS.EXE
 stays untouched; the patch adds new executables and new data files.
 
 
-1. Files
+1. Installing the patch
+-----------------------
+You need a FULL installation of the DOS game (see section 3) and Python 3.9
+or newer. Unpack the patch zip anywhere; it does not have to be in the game
+folder.
+
+Windows:       double-click nfsse-patcher.bat, or drag the game folder onto it.
+               No Python yet? Install it from https://www.python.org/downloads/
+               and tick "Add python.exe to PATH" in the installer.
+               Windows may warn about a file from the internet: confirm with
+               "Run" (or "More info" > "Run anyway").
+macOS / Linux: open a terminal in the unpacked folder and run
+                   sh nfsse-patcher.sh
+
+The first run sets up a private Python environment in the folder .venv next to
+the launcher (downloads numpy, scipy and Pillow, about 100 MB, only once).
+Then the patcher asks for the game folder and the options, writes the new
+files next to the originals and shows the DOSBox-X settings you need. Run it
+again at any time to change the options.
+
+Command line options (optional): nfsse-patcher.bat --help (Windows) or
+sh nfsse-patcher.sh --help (macOS / Linux), e.g. "<game folder>" --res 1280 -y
+
+To remove the patch, delete the files listed in section 2 from the game
+folder and delete the unpacked patch folder.
+
+
+2. Files
 --------
 NFS1024.EXE     race in 1024x768
 NFS1280.EXE     race in 1280x960
-(by default both include the optional features of sections 4a/4b; the patcher
+(by default both include the optional features of sections 5a/5b; the patcher
 options --steer 1 and --view original turn them off)
 
 Additional data files (the originals are not modified):
@@ -33,7 +60,7 @@ Additional data files (the originals are not modified):
 Start the game with NFS1024.EXE or NFS1280.EXE instead of NFS.EXE.
 
 
-2. Requirements: installation and DOSBox-X configuration
+3. Requirements: installation and DOSBox-X configuration
 --------------------------------------------------------
 Installation: the patch needs a FULL installation of the DOS version.
 In the setup program choose "Custom" and select ALL components. "Minimal" and
@@ -63,7 +90,7 @@ Why: 1280x960 is VESA mode 0x22B, which DOSBox-X only offers with these settings
 cycles = max (or auto). 1280x960 draws ~56% more pixels than 1024x768.
 
 
-3. Requirements: in-game settings
+4. Requirements: in-game settings
 ---------------------------------
 - Options > Graphic Details > Resolution must be set to 640x480.
   The 320x200 setting is not supported by the patch.
@@ -71,7 +98,7 @@ cycles = max (or auto). 1280x960 draws ~56% more pixels than 1024x768.
   rendering modes (half-resolution 3D) are untested.
 
 
-4. What changes
+5. What changes
 ---------------
 - 3D view, exterior and cockpit, in full resolution; the exterior view uses the
   whole screen.
@@ -89,7 +116,7 @@ cycles = max (or auto). 1280x960 draws ~56% more pixels than 1024x768.
   (up to 48 MB), which the larger graphics need.
 
 
-4a. Optional: faster keyboard steering
+5a. Optional: faster keyboard steering
 --------------------------------------
 With digital input (keyboard) the original builds up the steering angle slowly,
 especially at high speed, so correcting mid-corner often ends in the barrier.
@@ -102,7 +129,7 @@ testing, but this is not guaranteed for every replay.
 Do not mix different executables in network/modem races.
 
 
-4b. Optional: extended view distance and traffic
+5b. Optional: extended view distance and traffic
 -----------------------------------------------------------------
 - Track drawn 32 blocks ahead instead of 28; detailed road textures (lane
   markings etc.) over 12 blocks instead of 4.
@@ -121,7 +148,7 @@ Do not mix different executables in network/modem races.
   0x1900 -> 0x3200; mirror: 0xa00 -> 0x1400, hidden beyond 0x4200).
 
 
-5. Known limitations
+6. Known limitations
 --------------------
 - With the extended view distance, the rear-view mirror can render oddly while
   driving inside tunnels (only there).
@@ -133,7 +160,7 @@ Do not mix different executables in network/modem races.
   raised to 1024 lines; resolutions above 1024 lines would need further work.
 
 
-6. Support, questions, source code
+7. Support, questions, source code
 ----------------------------------
 Questions, problems, source code and technical documentation:
 https://github.com/sebauer/nfsse-enhanced
@@ -142,7 +169,7 @@ Enjoying the patch? You can buy me a coffee: https://buymeacoffee.com/sebauer
 Entirely optional - thanks for racing!
 
 
-7. Legal
+8. Legal
 --------
 This patch modifies a commercial game. Do not redistribute NFS.EXE or the game
 data. Distribute only the patch / generator and let users apply it to their own
