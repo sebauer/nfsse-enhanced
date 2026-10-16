@@ -1,0 +1,53 @@
+# Release: push a tag v<VERSION> (matching nfsse/version.py) -> zip of the patcher scripts as a draft release.
+# No game files are involved here; the real acceptance test happens locally before tagging.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ['3.9', '3.13']   # oldest supported and current
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tag matches nfsse/version.py
+        run: |
+          v=$(python3 -c "import sys; sys.path.insert(0, 'nfsse'); import version; print(version.VERSION)")
+          [ "v$v" = "$GITHUB_REF_NAME" ] || { echo "::error::tag $GITHUB_REF_NAME does not match nfsse/version.py ($v)"; exit 1; }
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install and start the patcher
+        run: |
+          python -m pip install -q -r requirements.txt
+          python patcher.py --help
+          python -c "import sys; sys.path.insert(0, 'nfsse'); import exe, hud, masks, cockpit, tickets, title, qfs, fsh, ui"
+          python patcher.py /nonexistent --check && exit 1 || true
+
+  release:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build zip
+        run: |
+          name=nfsse-enhanced-$GITHUB_REF_NAME
+          mkdir -p dist/$name
+          cp -r patcher.py nfsse requirements.txt nfsse-patcher.sh nfsse-patcher.bat LICENSE dist/$name/
+          cp docs/USER_README.txt dist/$name/README.txt
+          chmod +x dist/$name/nfsse-patcher.sh
+          (cd dist && zip -qr $name.zip $name -x '*/__pycache__/*')
+          unzip -l dist/$name.zip
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/*.zip --draft \
+            --title "NFS SE Enhanced $GITHUB_REF_NAME" --notes-file .github/release-notes.md
