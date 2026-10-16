@@ -11,7 +11,13 @@ release, `NFS_DOS.EXE` on the CD, dated 1996-06-19) and for every change `nfsse/
 | `86f80829727fd311387a69c55613a3332de4a2df27a350502d9bce1d1011df6a` | an installed copy seen in the wild | differs in one byte: file 0x607e6 (code 0x341e6, video player mode set) `push 0` → `push 8`. Origin unknown. All in-game testing so far used this variant. |
 
 Both are 1,254,591 bytes. Other releases (other languages, re-releases) are untested and
-should be refused by the patcher.
+are refused by the patcher.
+
+The differing byte is the third argument of the mode-set call `0x84d74(w, h, bpp)` in the video
+player `0x341a4` (320×200). `bpp = 0` means the default, 16 bpp (`0x84df1`), so the CD EXE asks for
+320×200 hicolor; the 86f8 variant asks for 320×200×8 — presumably a fix for cards without a
+320×200×16 mode. `patcher.py` sets this byte on the CD EXE before patching, so both variants
+produce byte-identical (tested) executables.
 
 ## Layout
 

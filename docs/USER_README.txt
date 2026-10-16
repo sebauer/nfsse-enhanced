@@ -11,8 +11,8 @@ stays untouched; the patch adds new executables and new data files.
 --------
 NFS1024.EXE     race in 1024x768
 NFS1280.EXE     race in 1280x960
-(both include the optional features of sections 4a/4b; a future patcher will
-let you choose them individually)
+(by default both include the optional features of sections 4a/4b; the patcher
+options --steer 1 and --view original turn them off)
 
 Additional data files (the originals are not modified):
   SIMDATA\MISC\MASKHJ.*, MASKHJG.FSH      HUD / blit masks 1024x768

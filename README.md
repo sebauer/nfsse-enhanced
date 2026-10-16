@@ -8,8 +8,24 @@ cockpits, optional faster keyboard steering, longer view distance and a tuned tr
 > Electronic Arts. This repository contains **no game files**: all graphics are generated
 > from the user's own installation.
 
-**Status: v0.9 in development.** The generators are complete and verified; the end-user
-patcher (`patcher.py`, later also a browser version) is the next step.
+**Status: v0.9 in development.** Generators and the command-line patcher are done; a browser
+version is planned.
+
+## Usage
+
+```
+python3 -m pip install numpy scipy Pillow
+python3 patcher.py "<game folder>"                       # both resolutions, release options
+python3 patcher.py "<game folder>" --res 1280 --steer 1   # 1280x960 only, original steering
+python3 patcher.py "<game folder>" --check                # only check the installation
+```
+
+Options: `--res 1024 1280`, `--steer 1..4` (keyboard steering factor, default 2),
+`--view extended|original` (view distance, car visibility, traffic window; default extended),
+`--out DIR` (write elsewhere, for testing). The patcher verifies `NFS.EXE` (both known variants,
+see `docs/EXE.md`), checks that the installation is complete, builds cockpits and the title
+screen for every installed language and prints the required DOSBox-X settings. Generating both
+resolutions takes several minutes (cockpit rescaling).
 
 ## How it works
 
