@@ -1,14 +1,13 @@
 # NFS SE Enhanced
 
-Unofficial high-resolution patch for **The Need for Speed Special Edition** (DOS, 1996).
-Races run in **1024×768** or **1280×960** instead of 640×480, with an adapted HUD, rescaled
-cockpits, optional faster keyboard steering, longer view distance and a tuned traffic window.
+Unofficial patch for **The Need for Speed Special Edition** (DOS, 1996).
 
 Thirty years after the original, I was tired of barely making out the traffic ahead: without a
 proper CRT monitor, 640×480 on a modern screen turns oncoming cars into a few blurry pixels until
-it is almost too late. So this is a gently modernised version — higher resolution, longer view
-and draw distances, cars that appear further ahead and more responsive keyboard steering — that
-stays true to the retro charm of the 1996 original. No new artwork, no remastered textures:
+it is almost too late. So this is a gently modernised version that stays true to the retro charm
+of the original. Races run in **1024×768** or **1280×960** with longer view and draw distances,
+cars that appear further ahead, a tuned traffic window and more responsive keyboard steering.
+HUD and cockpits are adapted to the new resolution. No new artwork, no remastered textures:
 everything is rescaled from the game's own files.
 
 > Not affiliated with or endorsed by Electronic Arts. "Need for Speed" is a trademark of
@@ -66,13 +65,13 @@ See [`docs/USER_README.txt`](docs/USER_README.txt) for the full player documenta
 
 ## Documentation
 
-- [`docs/EXE.md`](docs/EXE.md) — executable layout, every patch site, rejected experiments
-- [`docs/FORMATS.md`](docs/FORMATS.md) — FSH, QFS, Huffman, BAMF, FNTF, directory layout
+- [`docs/EXE.md`](docs/EXE.md): executable layout, every patch site, rejected experiments
+- [`docs/FORMATS.md`](docs/FORMATS.md): FSH, QFS, Huffman, BAMF, FNTF, directory layout
 
 ## Support
 
 If the patch brings back some 1996 racing memories, you can
-[buy me a coffee ☕](https://buymeacoffee.com/sebauer) — entirely optional, and thanks for racing! 🏁
+[buy me a coffee ☕](https://buymeacoffee.com/sebauer). Entirely optional, and thanks for racing! 🏁
 
 ## License
 
