@@ -52,7 +52,8 @@ by the analysis helpers (`le.dis`, `emu.py`, `stackfix.regen`).
 
 - The **DOS** version, English or German, installed **completely** (setup → *Custom* → all
   components). The Windows 95 version is not supported.
-- DOSBox-X (`memsize = 64` for 1280×960, plus the VESA settings in the user README).
+- DOSBox-X (`memsize = 64` for 1280×960, plus the VESA settings in the user README). The patch
+  is tested mainly with DOSBox-X; other DOSBox versions may work but are untested.
 
 See [`docs/USER_README.txt`](docs/USER_README.txt) for the full player documentation.
 

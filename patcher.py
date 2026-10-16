@@ -144,6 +144,7 @@ def generate(J,workers,ui):
 
 def notes(ui,res):
     ui.head('DOSBox-X configuration (dosbox-x.conf)')
+    ui.p(ui.c('2','    Tested mainly with DOSBox-X; other DOSBox versions may work but are untested.'))
     ui.p('    [dosbox]'); ui.p('    machine = svga_s3')
     ui.p('    memsize = 64' if 1280 in res else '    memsize = 32       (64 if you also want 1280x960)')
     if 1280 in res:

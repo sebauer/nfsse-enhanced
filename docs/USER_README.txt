@@ -46,6 +46,9 @@ vesa modelist width limit  = 1280
 vesa modelist height limit = 1024
 
 Why: 1280x960 is VESA mode 0x22B, which DOSBox-X only offers with these settings.
+
+The patch is tested mainly with DOSBox-X. Other DOSBox versions may work but
+are untested.
 1024x768 (mode 0x105) works with the default settings.
 
 [cpu]
