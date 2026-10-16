@@ -36,10 +36,10 @@ class Progress:
         s.clear(); now=time.time(); s.tick+=1
         w=shutil.get_terminal_size((80,24)).columns; bw=max(10,min(40,w-24))
         f=round(bw*s.done/s.n); full,empty=('█','░') if ui.uni else ('#','-')
-        lines=[f'  {ui.c("32",full*f)}{ui.c("2",empty*(bw-f))} {s.done:>{len(str(s.n))}}/{s.n}  {clock(now-s.t0)}']
-        spin=(s.SPIN if ui.uni else '|/-\\')
+        lines=[]; spin=(s.SPIN if ui.uni else '|/-\\')
         for k,(i,t) in enumerate(sorted(s.running.items(),key=lambda x:x[1])):
             lab=f'{s.labels[i]:<{s.wl}}'[:max(10,w-12)]   # keep every line shorter than the terminal
             lines.append(f'  {ui.c("36",spin[(s.tick+k)%len(spin)])} {lab}  {ui.c("2",f"{now-t:5.1f}s")}')
+        lines.append(f'  {ui.c("32",full*f)}{ui.c("2",empty*(bw-f))} {s.done:>{len(str(s.n))}}/{s.n}  {clock(now-s.t0)}')   # bar stays the bottom line
         ui.o.write('\n'.join(lines)+'\n'); ui.o.flush(); s.drawn=len(lines)
     def end(s): s.clear(); s.ui.o.flush()
