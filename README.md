@@ -22,10 +22,10 @@ python3 patcher.py "<game folder>" --check                # only check the insta
 
 Options: `--res 1024 1280`, `--steer 1..4` (keyboard steering factor, default 2),
 `--view extended|original` (view distance, car visibility, traffic window; default extended),
-`--out DIR` (write elsewhere, for testing). The patcher verifies `NFS.EXE` (both known variants,
+`--jobs N` (parallel jobs, default half the CPU cores), `--out DIR` (write elsewhere, for testing). The patcher verifies `NFS.EXE` (both known variants,
 see `docs/EXE.md`), checks that the installation is complete, builds cockpits and the title
 screen for every installed language and prints the required DOSBox-X settings. Generating both
-resolutions takes several minutes (cockpit rescaling).
+resolutions takes about 15 s on a 12-core machine (about 70 s with `--jobs 1`).
 
 ## How it works
 

@@ -4,7 +4,7 @@ hi-res executables and data files next to the originals (which stay untouched).
 
     python3 patcher.py <game folder> [--res 1024 1280] [--steer 2] [--view extended|original]
 """
-import argparse,hashlib,os,sys
+import argparse,hashlib,os,sys,time
 sys.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__file__)),'nfsse'))
 VERSION='0.9'
 
@@ -72,32 +72,60 @@ def check_install(game,langs):
                      '  The patch needs a FULL installation: run the game setup again, choose "Custom" and\n'
                      '  select ALL components.')
 
-def generate(game,out,res,steer,view,exe_bytes,langs,log=print):
-    made=[]
-    def done(*p): made.append(os.path.join(*p))
+# --- jobs: module-level functions so worker processes can run them (spawn on Windows/macOS) ---
+def job_title(game,out): import title; title.build_all(game,out,VERSION)
+def job_exe(exe_bytes,path,W,H,tag,steer,view): import exe; exe.build(exe_bytes,path,W,H,tag,steer=steer,**VIEW[view])
+def job_hud(misc_in,tag,W,H,misc_out): import hud; hud.build_all(misc_in,tag,W,H,misc_out)
+def job_masks(misc_in,tag,W,H,misc_out): import masks; masks.build_all(misc_in,tag,W,H,misc_out)
+def job_ticket(misc_in,tag,W,H,misc_out,name): import tickets; tickets.build_all(misc_in,tag,W,H,misc_out,[name])
+def job_cockpit(tag,W,H,car,src,dst):
+    import cockpit; cockpit.SRC,cockpit.OUT=src,dst; cockpit.lanczos(car,tag,W,H)
+def timed(fn,args):
+    t=time.time(); fn(*args); return time.time()-t
+
+def jobs(game,out,res,steer,view,exe_bytes,langs):
+    """independent jobs (label, function, args, files written), slowest first; each writes only its own files"""
     misc_in=os.path.join(game,'SIMDATA','MISC')+os.sep; misc_out=os.path.join(out,'SIMDATA','MISC')+os.sep
-    os.makedirs(misc_out,exist_ok=True)
-    for sub in title.build_all(game,out,VERSION): done('FRONTEND',sub,title.OUTNAME)
-    log('title screen: '+', '.join(made))
-    for r in res:
-        tag,W,H=RES[r]; name=f'NFS{r}.EXE'
-        log(f'--- {W}x{H} ---')
-        exe.build(exe_bytes,os.path.join(out,name),W,H,tag,steer=steer,**VIEW[view]); done(name); log(name)
-        hud.build_all(misc_in,tag,W,H,misc_out); done('SIMDATA','MISC',f'MASKH{tag}.FSH'); done('SIMDATA','MISC',f'MASKH{tag}G.FSH')
-        masks.build_all(misc_in,tag,W,H,misc_out)
-        for v in range(3):
-            for p in range(4): done('SIMDATA','MISC',f'MASKH{tag}.B{v}{p}')
-        done('SIMDATA','MISC',f'MASKH{tag}.MMB'); log('HUD and blit masks')
-        tickets.build_all(misc_in,tag,W,H,misc_out)
-        for n in tickets.NAMES: done('SIMDATA','MISC',n[:-1]+tag+'.QFS')
-        log('ticket / warning screens')
+    J=[]; P=os.path.join
+    for r in sorted(res,reverse=True):
+        tag,W,H=RES[r]
         for l in langs:
-            dash=LANG[l][1]; src=os.path.join(game,'SIMDATA',dash)+os.sep; dst=os.path.join(out,'SIMDATA',dash)+os.sep
-            os.makedirs(dst,exist_ok=True)
+            dash=LANG[l][1]; src=P(game,'SIMDATA',dash)+os.sep; dst=P(out,'SIMDATA',dash)+os.sep
             for car in cockpit.CARS:
-                cockpit.build_all(tag,W,H,[car],src,dst)
-                done('SIMDATA',dash,car+'D'+tag+'.FSH'); done('SIMDATA',dash,car+'D'+tag+'.FMM')
-            log(f'cockpits ({dash})')
+                J.append((f'cockpit {car} {W}x{H} ({dash})',job_cockpit,(tag,W,H,car,src,dst),[P('SIMDATA',dash,car+'D'+tag+e) for e in ('.FSH','.FMM')]))
+    for r in sorted(res,reverse=True):
+        tag,W,H=RES[r]
+        for n in tickets.NAMES:
+            J.append((f'screen {n[:-1]+tag} {W}x{H}',job_ticket,(misc_in,tag,W,H,misc_out,n),[P('SIMDATA','MISC',n[:-1]+tag+'.QFS')]))
+    for r in sorted(res,reverse=True):
+        tag,W,H=RES[r]; name=f'NFS{r}.EXE'
+        J.append((f'{name}',job_exe,(exe_bytes,P(out,name),W,H,tag,steer,view),[name]))
+        J.append((f'HUD {W}x{H}',job_hud,(misc_in,tag,W,H,misc_out),[P('SIMDATA','MISC',f'MASKH{tag}{g}.FSH') for g in ('','G')]))
+        J.append((f'blit masks {W}x{H}',job_masks,(misc_in,tag,W,H,misc_out),
+                  [P('SIMDATA','MISC',f'MASKH{tag}.B{v}{p}') for v in range(3) for p in range(4)]+[P('SIMDATA','MISC',f'MASKH{tag}.MMB')]))
+    J.append(('title screen',job_title,(game,out),[P('FRONTEND',LANG[l][0],title.OUTNAME) for l in langs]))
+    os.makedirs(misc_out,exist_ok=True)
+    for l in langs: os.makedirs(P(out,'SIMDATA',LANG[l][1]),exist_ok=True)
+    return J
+
+def default_workers(): return max(1,(os.cpu_count() or 2)//2)   # half the cores: parallel, but leave the machine usable
+
+def generate(J,workers,log=print):
+    """run the jobs (in a process pool if workers>1); returns the files written"""
+    made=[]
+    def done(k,lab,files,dt):
+        made.extend(files); log(f'[{k:2}/{len(J)}] {lab:<34} {dt:5.1f}s')
+    if workers<=1:
+        for k,(lab,fn,args,files) in enumerate(J,1): done(k,lab,files,timed(fn,args))
+        return made
+    from concurrent.futures import ProcessPoolExecutor,as_completed
+    with ProcessPoolExecutor(workers) as ex:
+        fut={ex.submit(timed,fn,args):(lab,files) for lab,fn,args,files in J}
+        try:
+            for k,f in enumerate(as_completed(fut),1): done(k,*fut[f],f.result())
+        except BaseException:
+            for f in fut: f.cancel()
+            raise
     return made
 
 def dosbox_notes(res):
@@ -117,6 +145,7 @@ def main(argv=None):
     ap.add_argument('--steer',type=int,choices=(1,2,3,4),default=2,help='keyboard steering speed factor, 1 = original (default: 2)')
     ap.add_argument('--view',choices=sorted(VIEW),default='extended',help='extended view distance, car visibility and traffic window, or original (default: extended)')
     ap.add_argument('--check',action='store_true',help='only check the installation, write nothing')
+    ap.add_argument('--jobs',type=int,default=default_workers(),help=f'parallel jobs (default: half the CPU cores, here {default_workers()})')
     ap.add_argument('--out',help='write the generated files to this folder instead of the game folder (testing)')
     ap.add_argument('--keep-video-mode',action='store_true',help=argparse.SUPPRESS)   # do not normalise the CD EXE to 86f8
     a=ap.parse_args(argv)
@@ -135,8 +164,10 @@ def main(argv=None):
     if a.check: return 0
     print(f'options     : {", ".join(f"{r}" for r in res)}; steering x{a.steer}; view {a.view}')
     if out!=game: print(f'output      : {out}')
-    made=generate(game,out,res,a.steer,a.view,exe_bytes,langs)
-    print(f'\ndone: {len(made)} files written, original files unchanged.')
+    J=jobs(game,out,res,a.steer,a.view,exe_bytes,langs); w=max(1,min(a.jobs,len(J)))
+    print(f'jobs        : {len(J)}, {w} in parallel\n')
+    t=time.time(); made=generate(J,w)
+    print(f'\ndone in {time.time()-t:.0f}s: {len(made)} files written, original files unchanged.')
     print(dosbox_notes(res))
     return 0
 
