@@ -149,7 +149,7 @@ def notes(ui,res):
     if 1280 in res:
         for l in ('[video]','allow unusual vesa modes   = true','vesa modelist width limit  = 1280','vesa modelist height limit = 1024'): ui.p('    '+l)
     ui.p('    [cpu]'); ui.p('    cycles = max')
-    ui.head('In the game')
+    ui.p(); ui.head('In the game')
     ui.p('    Options > Graphic Details > Resolution must be 640x480.')
     ui.p('    Start the race with '+' or '.join(f'NFS{r}.EXE' for r in res)+' instead of NFS.EXE.')
 
