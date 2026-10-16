@@ -122,9 +122,13 @@ Do not mix different executables in network/modem races.
   raised to 1024 lines; resolutions above 1024 lines would need further work.
 
 
-6. For developers
------------------
-Source code and technical documentation: https://github.com/sebauer/nfsse-enhanced
+6. Support, questions, source code
+----------------------------------
+Questions, problems, source code and technical documentation:
+https://github.com/sebauer/nfsse-enhanced
+
+Enjoying the patch? You can buy me a coffee: https://buymeacoffee.com/sebauer
+Entirely optional - thanks for racing!
 
 
 7. Legal

@@ -61,6 +61,11 @@ See [`docs/USER_README.txt`](docs/USER_README.txt) for the full player documenta
 - [`docs/EXE.md`](docs/EXE.md) — executable layout, every patch site, rejected experiments
 - [`docs/FORMATS.md`](docs/FORMATS.md) — FSH, QFS, Huffman, BAMF, FNTF, directory layout
 
+## Support
+
+If the patch brings back some 1996 racing memories, you can
+[buy me a coffee ☕](https://buymeacoffee.com/sebauer) — entirely optional, and thanks for racing! 🏁
+
 ## License
 
 MIT (see `LICENSE`) for the code in this repository.
