@@ -20,6 +20,7 @@ python3 patcher.py "<game folder>" --res 1280 --steer 1   # 1280x960 only, origi
 python3 patcher.py "<game folder>" --check                # only check the installation
 ```
 
+Without options the patcher asks for resolution, steering and view (in a terminal; `-y` takes the defaults).
 Options: `--res 1024 1280`, `--steer 1..4` (keyboard steering factor, default 2),
 `--view extended|original` (view distance, car visibility, traffic window; default extended),
 `--jobs N` (parallel jobs, default half the CPU cores), `--out DIR` (write elsewhere, for testing). The patcher verifies `NFS.EXE` (both known variants,

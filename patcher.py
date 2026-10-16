@@ -154,18 +154,32 @@ def notes(ui,res):
     ui.p('    Options > Graphic Details > Resolution must be 640x480.')
     ui.p('    Start the race with '+' or '.join(f'NFS{r}.EXE' for r in res)+' instead of NFS.EXE.')
 
+def ask_options(ui,a):
+    """ask for the build options not given on the command line; False = user declined"""
+    ui.p(); ui.head('Build options')
+    if a.res is None:
+        a.res=ui.choose('Resolution',[([1024],'1024x768'),([1280],'1280x960   (DOSBox-X: memsize = 64 and VESA settings, shown at the end)'),
+                                      ([1024,1280],'both (recommended)')],3)
+    if a.steer is None:
+        a.steer=ui.choose('Keyboard steering (joystick/wheel are not affected)',[(1,'original'),(2,'2x faster (recommended)'),
+                                      (3,'3x faster (scrubs more speed in corners)'),(4,'4x faster')],2)
+    if a.view is None:
+        a.view=ui.choose('View distance, car visibility and traffic',[('extended','extended (recommended)'),('original','original')],1)
+    return ui.confirm('Start patching?')
+
 def main(argv=None):
     ap=argparse.ArgumentParser(description=f'NFS SE Enhanced v{VERSION} - hi-res patch for Need for Speed SE (DOS)')
     ap.add_argument('game',help='game folder (contains NFS.EXE)')
-    ap.add_argument('--res',type=int,nargs='+',choices=sorted(RES),default=sorted(RES),help='resolution(s) to build (default: both)')
-    ap.add_argument('--steer',type=int,choices=(1,2,3,4),default=2,help='keyboard steering speed factor, 1 = original (default: 2)')
-    ap.add_argument('--view',choices=sorted(VIEW),default='extended',help='extended view distance, car visibility and traffic window, or original (default: extended)')
+    ap.add_argument('--res',type=int,nargs='+',choices=sorted(RES),help='resolution(s) to build (default: both)')
+    ap.add_argument('--steer',type=int,choices=(1,2,3,4),help='keyboard steering speed factor, 1 = original (default: 2)')
+    ap.add_argument('--view',choices=sorted(VIEW),help='extended view distance, car visibility and traffic window, or original (default: extended)')
+    ap.add_argument('-y','--yes',action='store_true',help='do not ask: use the defaults for options not given')
     ap.add_argument('--check',action='store_true',help='only check the installation, write nothing')
     ap.add_argument('--jobs',type=int,default=default_workers(),help=f'parallel jobs (default: half the CPU cores, here {default_workers()})')
     ap.add_argument('--out',help='write the generated files to this folder instead of the game folder (testing)')
     ap.add_argument('--keep-video-mode',action='store_true',help=argparse.SUPPRESS)   # do not normalise the CD EXE to 86f8
     a=ap.parse_args(argv)
-    game=os.path.abspath(a.game); out=os.path.abspath(a.out) if a.out else game; res=sorted(set(a.res)); ui=UI()
+    game=os.path.abspath(a.game); out=os.path.abspath(a.out) if a.out else game; ui=UI()
     ui.logo(f'v{VERSION} - hi-res patch for Need for Speed SE (DOS)'); ui.p()
     ui.head('Checking your installation')
     try:
@@ -179,6 +193,12 @@ def main(argv=None):
     ui.info('Language',f'{(cl or "?").title()} (NFS.CFG); generating for: {", ".join(l.title() for l in langs)}')
     ui.ok('Installation complete')
     if a.check: return 0
+    if None in (a.res,a.steer,a.view) and not a.yes and sys.stdin.isatty():
+        try:
+            if not ask_options(ui,a): ui.p('  Nothing written.'); return 0
+        except (KeyboardInterrupt,EOFError):
+            ui.p(); ui.error('aborted, nothing written'); return 130
+    res=sorted(set(a.res or RES)); a.steer=a.steer or 2; a.view=a.view or 'extended'
     J=jobs(game,out,res,a.steer,a.view,exe_bytes,langs); w=max(1,min(a.jobs,len(J)))
     ui.p(); ui.head('Building '+' and '.join(f'{RES[r][1]}x{RES[r][2]}' for r in res)+f' ({len(J)} jobs, {w} in parallel)')
     ui.info('Options',f'keyboard steering x{a.steer}, view {a.view}')

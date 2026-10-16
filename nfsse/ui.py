@@ -36,6 +36,22 @@ class UI:
     def info(s,k,v): s.p(f'    {k:<13}{v}')
     def ok(s,t): s.p(s.c('1;32','✔' if s.uni else 'OK')+' '+t)
     def error(s,t): print(s.c('1;31','Error:')+' '+t,file=sys.stderr,flush=True)
+    def ask(s,q,default):
+        a=input(f'  {q} '+s.c('2',f'[{default}]')+' ').strip()   # EOFError / KeyboardInterrupt go to the caller
+        return a or default
+    def choose(s,title,options,default):
+        """options: [(value, label)]; default: 1-based number; returns the chosen value"""
+        s.p(f'  {s.c("1",title)}')
+        for k,(_,lab) in enumerate(options,1): s.p(f'    {s.c("36",str(k))}) {lab}')
+        while True:
+            a=s.ask('Choice',str(default))
+            if a.isdigit() and 1<=int(a)<=len(options): s.p(); return options[int(a)-1][0]
+            s.p(f'    please enter a number from 1 to {len(options)}')
+    def confirm(s,q):
+        while True:
+            a=s.ask(q,'Y').lower()
+            if a in ('y','yes','j','ja'): return True
+            if a in ('n','no','nein'): return False
     def progress(s,labels): return Progress(s,labels)
 def clock(t): t=int(t); return f'{t//60}:{t%60:02d}'
 class Progress:
