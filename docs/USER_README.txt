@@ -3,6 +3,14 @@ NFS SE Enhanced v0.9 by github.com/sebauer
 Unofficial patch for Need for Speed SE (DOS). Not affiliated with or endorsed by
 Electronic Arts. "Need for Speed" is a trademark of Electronic Arts.
 
+Thirty years after the original, I was tired of barely making out the traffic
+ahead: without a proper CRT monitor, 640x480 on a modern screen turns oncoming
+cars into a few blurry pixels until it is almost too late. So this is a gently
+modernised version - higher resolution, longer view and draw distances, cars
+that appear further ahead and more responsive keyboard steering - that stays
+true to the retro charm of the 1996 original. No new artwork, no remastered
+textures: everything is rescaled from the game's own files.
+
 Runs the race in 1024x768 or 1280x960 instead of 640x480. The original NFS.EXE
 stays untouched; the patch adds new executables and new data files.
 

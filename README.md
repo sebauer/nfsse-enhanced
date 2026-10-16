@@ -4,6 +4,13 @@ Unofficial high-resolution patch for **The Need for Speed Special Edition** (DOS
 Races run in **1024×768** or **1280×960** instead of 640×480, with an adapted HUD, rescaled
 cockpits, optional faster keyboard steering, longer view distance and a tuned traffic window.
 
+Thirty years after the original, I was tired of barely making out the traffic ahead: without a
+proper CRT monitor, 640×480 on a modern screen turns oncoming cars into a few blurry pixels until
+it is almost too late. So this is a gently modernised version — higher resolution, longer view
+and draw distances, cars that appear further ahead and more responsive keyboard steering — that
+stays true to the retro charm of the 1996 original. No new artwork, no remastered textures:
+everything is rescaled from the game's own files.
+
 > Not affiliated with or endorsed by Electronic Arts. "Need for Speed" is a trademark of
 > Electronic Arts. This repository contains **no game files**: all graphics are generated
 > from the user's own installation.
