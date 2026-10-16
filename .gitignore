@@ -10,7 +10,6 @@
 *.FFN
 *.iso
 *.ISO
-NFSSE/
 fix.pkl
 *.pkl
 # local working notes for Claude Code (kept outside the repo on purpose)
