@@ -33,10 +33,15 @@ def image(u,o,base=0):
     rgba=np.zeros((h,w,4),np.uint8); rgba[...,:3]=pal[px]; rgba[...,3]=np.where(px==255,0,255)
     return Image.fromarray(rgba,'RGBA'),px,pal
 def quant(rgb,P):
+    """nearest palette index (0..254) per colour; computed once per distinct colour"""
+    if np.all((rgb>=0)&(rgb<=255)&(rgb==np.round(rgb))):   # 8-bit colours: fast 1-D unique on a 24-bit key
+        k=rgb.astype(np.int64); k=(k[:,0]<<16)|(k[:,1]<<8)|k[:,2]
+        _,first,inv=np.unique(k,return_index=True,return_inverse=True); rgb=rgb[first]
+    else: rgb,inv=np.unique(rgb,axis=0,return_inverse=True)
     out=np.empty(len(rgb),np.uint8); P=P[:255]
     for i in range(0,len(rgb),32768):
         ch=rgb[i:i+32768]; out[i:i+32768]=((ch[:,None,:]-P[None])**2).sum(2).argmin(1)
-    return out
+    return out[inv.reshape(-1)]
 def rebuild(d,replace):
     de=parse(d); n=len(de)
     order=sorted(range(n),key=lambda i:de[i][1]); first=de[order[0]][1]

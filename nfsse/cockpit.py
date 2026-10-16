@@ -106,7 +106,8 @@ def defringe(car,tag):
     for _ in range(3):
         tr=px==255; edge=nd.binary_dilation(tr,iterations=1)&~tr
         L=np.where(tr,np.nan,lum[px])
-        inner=nd.generic_filter(np.nan_to_num(L,nan=0.0),np.sum,size=5)/np.maximum(nd.generic_filter((~tr).astype(float),np.sum,size=5),1)
+        K=np.ones((5,5))   # 5x5 neighbourhood sums (mode 'reflect')
+        inner=nd.correlate(np.nan_to_num(L,nan=0.0),K)/np.maximum(nd.correlate((~tr).astype(float),K),1)
         bad=edge&(lum[px]>150)&(lum[px]>inner+35)
         if not bad.any(): break
         px[bad]=255; n+=int(bad.sum())

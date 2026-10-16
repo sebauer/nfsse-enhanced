@@ -1,7 +1,7 @@
 """Ticket / warning full-screen images (TICKET*/WARN* ..H.QFS -> ..<tag>.QFS), Lanczos-scaled to W x H."""
 import sys,os,struct,numpy as np
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
-import qfs
+import qfs,fsh
 from PIL import Image
 NAMES=['TICKETDH','TICKETRH','TICKEGDH','TICKEGRH','WARNDH','WARNRH','GWARNDH','GWARNRH']
 def load(path): return qfs.decode(open(path,'rb').read())
@@ -16,9 +16,7 @@ def build(u,W,H):
     pal=np.frombuffer(u,np.uint8,768,po+16).reshape(256,3).astype(float)*255/63
     img=Image.fromarray(pal[px].astype(np.uint8)).resize((W,H),Image.LANCZOS)
     rgb=np.asarray(img).reshape(-1,3).astype(float)
-    P=pal[:254]; out=np.empty(len(rgb),np.uint8)
-    for i in range(0,len(rgb),32768):
-        ch=rgb[i:i+32768]; out[i:i+32768]=((ch[:,None,:]-P[None])**2).sum(2).argmin(1)
+    out=fsh.quant(rgb,pal[:254])
     hdr=bytearray(u[so:so+16])
     nxt=struct.unpack_from('<I',hdr,0)[0]>>8
     struct.pack_into('<I',hdr,0,0x7b|(((16+W*H) if nxt else 0)<<8))
