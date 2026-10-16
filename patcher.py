@@ -163,7 +163,8 @@ def ask_options(ui,a):
                                       ([1024,1280],'both (recommended)')],3)
     if a.steer is None:
         a.steer=ui.choose('Keyboard steering (joystick/wheel are not affected)',[(1,'original'),(2,'2x faster (recommended)'),
-                                      (3,'3x faster (scrubs more speed in corners)'),(4,'4x faster')],2)
+                                      (3,'3x faster (not recommended: scrubs off too much speed in corners)'),
+                                      (4,'4x faster (not recommended: scrubs off too much speed in corners)')],2)
     if a.view is None:
         a.view=ui.choose('View distance, car visibility and traffic',[('extended','extended (recommended)'),('original','original')],1)
     return ui.confirm('Start patching?')
