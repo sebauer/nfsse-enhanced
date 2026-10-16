@@ -192,7 +192,7 @@ def main(argv=None):
     ui.info('Game folder',game)
     ui.info('NFS.EXE',variant)
     ui.info('Language',f'{(cl or "?").title()} (NFS.CFG); generating for: {", ".join(l.title() for l in langs)}')
-    ui.ok('Installation complete')
+    ui.ok('Game installation verified')
     if a.check: return 0
     if None in (a.res,a.steer,a.view) and not a.yes and sys.stdin.isatty():
         try:
