@@ -7,7 +7,7 @@ hi-res executables and data files next to the originals (which stay untouched).
 import argparse,hashlib,os,sys,time
 sys.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__file__)),'nfsse'))
 from ui import UI,clock
-VERSION='0.9'
+from version import VERSION
 REPO='https://github.com/sebauer/nfsse-enhanced'
 COFFEE='https://buymeacoffee.com/sebauer'
 

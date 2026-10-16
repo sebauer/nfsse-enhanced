@@ -3,7 +3,7 @@ from the same installation, white with black drop shadow like the original credi
 import sys,os,struct,numpy as np
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import qfs,fsh,ffn
-VERSION='0.9'
+from version import VERSION
 TEXT='Enhanced Patch v{v} \xa92026 by github.com/sebauer'
 def stamp(title_qfs,font_ffn,text=None,y=None,shadow=2,scale=0.85):
     u=bytearray(qfs.decode(open(title_qfs,'rb').read())); o=fsh.shapes(bytes(u))['bgnd']
