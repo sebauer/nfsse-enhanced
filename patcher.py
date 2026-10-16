@@ -180,7 +180,7 @@ def main(argv=None):
     ui.ok('Installation complete')
     if a.check: return 0
     J=jobs(game,out,res,a.steer,a.view,exe_bytes,langs); w=max(1,min(a.jobs,len(J)))
-    ui.head('Building '+' and '.join(f'{RES[r][1]}x{RES[r][2]}' for r in res)+f' ({len(J)} jobs, {w} in parallel)')
+    ui.p(); ui.head('Building '+' and '.join(f'{RES[r][1]}x{RES[r][2]}' for r in res)+f' ({len(J)} jobs, {w} in parallel)')
     ui.info('Options',f'keyboard steering x{a.steer}, view {a.view}')
     if out!=game: ui.info('Output',out)
     t=time.time(); made=generate(J,w,ui)
