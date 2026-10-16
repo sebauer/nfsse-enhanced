@@ -1,5 +1,5 @@
-NFS SE Enhanced v0.9
-====================
+NFS SE Enhanced v0.9 by github.com/sebauer
+==========================================
 Unofficial patch for Need for Speed SE (DOS). Not affiliated with or endorsed by
 Electronic Arts. "Need for Speed" is a trademark of Electronic Arts.
 
