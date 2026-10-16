@@ -35,6 +35,7 @@ class UI:
     def head(s,t): s.p(s.c('1;34','==>')+' '+s.c('1',t))
     def info(s,k,v): s.p(f'    {k:<13}{v}')
     def ok(s,t): s.p(s.c('1;32','✔' if s.uni else 'OK')+' '+t)
+    def warn(s,t): s.p(s.c('1;33','!')+' '+t)
     def error(s,t): print(s.c('1;31','Error:')+' '+t,file=sys.stderr,flush=True)
     def ask(s,q,default):
         a=input(f'  {q} '+s.c('2',f'[{default}]')+' ').strip()   # EOFError / KeyboardInterrupt go to the caller

@@ -112,8 +112,6 @@ def jobs(game,out,res,steer,view,exe_bytes,langs):
         J.append((f'blit masks {W}x{H}',job_masks,(misc_in,tag,W,H,misc_out),
                   [P('SIMDATA','MISC',f'MASKH{tag}.B{v}{p}') for v in range(3) for p in range(4)]+[P('SIMDATA','MISC',f'MASKH{tag}.MMB')]))
     J.append(('title screen',job_title,(game,out),[P('FRONTEND',LANG[l][0],title.OUTNAME) for l in langs]))
-    os.makedirs(misc_out,exist_ok=True)
-    for l in langs: os.makedirs(P(out,'SIMDATA',LANG[l][1]),exist_ok=True)
     return J
 
 def default_workers(): return max(1,(os.cpu_count() or 2)//2)   # half the cores: parallel, but leave the machine usable
@@ -156,7 +154,7 @@ def notes(ui,res):
     ui.p('    Start the race with '+' or '.join(f'NFS{r}.EXE' for r in res)+' instead of NFS.EXE.')
 
 def ask_options(ui,a):
-    """ask for the build options not given on the command line; False = user declined"""
+    """ask for the build options not given on the command line"""
     ui.p(); ui.head('Build options')
     if a.res is None:
         a.res=ui.choose('Resolution',[([1024],'1024x768'),([1280],'1280x960   (DOSBox-X: memsize = 64 and VESA settings, shown at the end)'),
@@ -167,7 +165,6 @@ def ask_options(ui,a):
                                       (4,'4x faster (not recommended: scrubs off too much speed in corners)')],2)
     if a.view is None:
         a.view=ui.choose('View distance, car visibility and traffic',[('extended','extended (recommended)'),('original','original')],1)
-    return ui.confirm('Start patching?')
 
 def main(argv=None):
     ap=argparse.ArgumentParser(description=f'NFS SE Enhanced v{VERSION} - hi-res patch for Need for Speed SE (DOS)')
@@ -195,16 +192,23 @@ def main(argv=None):
     ui.info('Language',f'{(cl or "?").title()} (NFS.CFG); generating for: {", ".join(l.title() for l in langs)}')
     ui.ok('Game installation verified')
     if a.check: return 0
-    if None in (a.res,a.steer,a.view) and not a.yes and sys.stdin.isatty():
-        try:
-            if not ask_options(ui,a): ui.p('  Nothing written.'); return 0
-        except (KeyboardInterrupt,EOFError):
-            ui.p(); ui.error('aborted, nothing written'); return 130
-    res=sorted(set(a.res or RES)); a.steer=a.steer or 2; a.view=a.view or 'extended'
-    J=jobs(game,out,res,a.steer,a.view,exe_bytes,langs); w=max(1,min(a.jobs,len(J)))
+    interactive=not a.yes and sys.stdin.isatty(); asked=interactive and None in (a.res,a.steer,a.view)
+    try:
+        if asked: ask_options(ui,a)
+        res=sorted(set(a.res or RES)); a.steer=a.steer or 2; a.view=a.view or 'extended'
+        J=jobs(game,out,res,a.steer,a.view,exe_bytes,langs); w=max(1,min(a.jobs,len(J)))
+        existing=[f for *_,files in J for f in files if os.path.exists(os.path.join(out,f))]
+        if existing:
+            if not asked: ui.p()
+            ui.warn(f'{len(existing)} of the {sum(len(j[3]) for j in J)} patch files already exist (earlier run) and will be replaced.')
+        if interactive and (asked or existing) and not ui.confirm('Replace them and start patching?' if existing else 'Start patching?'):
+            ui.p('  Nothing written.'); return 0
+    except (KeyboardInterrupt,EOFError):
+        ui.p(); ui.error('aborted, nothing written'); return 130
     ui.p(); ui.head('Building '+' and '.join(f'{RES[r][1]}x{RES[r][2]}' for r in res)+f' ({len(J)} jobs, {w} in parallel)')
     ui.info('Options',f'keyboard steering x{a.steer}, view {a.view}')
     if out!=game: ui.info('Output',out)
+    for d in {os.path.dirname(os.path.join(out,f)) for *_,files in J for f in files}: os.makedirs(d,exist_ok=True)
     t=time.time(); made=generate(J,w,ui)
     ui.ok(f'{len(made)} files written in {clock(time.time()-t)}, original files unchanged')
     ui.p(); ui.p(ui.c('1;32','  Success! Your game is patched. Start your engines - let\'s race!')); ui.p()
