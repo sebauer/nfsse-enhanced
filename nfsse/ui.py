@@ -37,8 +37,8 @@ class UI:
     def ok(s,t): s.p(s.c('1;32','✔' if s.uni else 'OK')+' '+t)
     def warn(s,t): s.p(s.c('1;33','!')+' '+t)
     def error(s,t): print(s.c('1;31','Error:')+' '+t,file=sys.stderr,flush=True)
-    def ask(s,q,default):
-        a=input(f'  {q} '+s.c('2',f'[{default}]')+' ').strip()   # EOFError / KeyboardInterrupt go to the caller
+    def ask(s,q,default=None):
+        a=input(f'  {q} '+(s.c('2',f'[{default}]')+' ' if default is not None else '')).strip()   # EOFError / KeyboardInterrupt go to the caller
         return a or default
     def choose(s,title,options,default):
         """options: [(value, label)]; default: 1-based number; returns the chosen value"""

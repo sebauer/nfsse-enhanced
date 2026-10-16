@@ -4,7 +4,7 @@ hi-res executables and data files next to the originals (which stay untouched).
 
     python3 patcher.py <game folder> [--res 1024 1280] [--steer 2] [--view extended|original]
 """
-import argparse,hashlib,os,sys,time
+import argparse,hashlib,os,shlex,sys,time
 sys.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__file__)),'nfsse'))
 from ui import UI,clock
 from version import VERSION
@@ -167,9 +167,25 @@ def ask_options(ui,a):
     if a.view is None:
         a.view=ui.choose('View distance, car visibility and traffic',[('extended','extended (recommended)'),('original','original')],1)
 
+def clean_path(s):
+    """a folder typed or dragged into the terminal: macOS escapes spaces (mac\\ data), Windows adds quotes"""
+    s=s.strip()
+    if os.name!='nt':
+        try: t=shlex.split(s)
+        except ValueError: t=[]
+        if len(t)==1: s=t[0]
+    return os.path.expanduser(s.strip().strip('"\''))
+
+def ask_game(ui):
+    ui.p('  Which folder is the game installed in? (type the path or drag the folder into this window)')
+    while True:
+        g=clean_path(ui.ask('Game folder:') or '')
+        if g and os.path.isfile(os.path.join(g,'NFS.EXE')): return g
+        ui.p(f'    {"no NFS.EXE in " + g if g else "please enter a folder"}')
+
 def main(argv=None):
     ap=argparse.ArgumentParser(description=f'NFS SE Enhanced v{VERSION} - hi-res patch for Need for Speed SE (DOS)')
-    ap.add_argument('game',help='game folder (contains NFS.EXE)')
+    ap.add_argument('game',nargs='?',help='game folder (contains NFS.EXE); asked for if missing')
     ap.add_argument('--res',type=int,nargs='+',choices=sorted(RES),help='resolution(s) to build (default: both)')
     ap.add_argument('--steer',type=int,choices=(1,2,3,4),help='keyboard steering speed factor, 1 = original (default: 2)')
     ap.add_argument('--view',choices=sorted(VIEW),help='extended view distance, car visibility and traffic window, or original (default: extended)')
@@ -179,9 +195,14 @@ def main(argv=None):
     ap.add_argument('--out',help='write the generated files to this folder instead of the game folder (testing)')
     ap.add_argument('--keep-video-mode',action='store_true',help=argparse.SUPPRESS)   # do not normalise the CD EXE to 86f8
     a=ap.parse_args(argv)
-    game=os.path.abspath(a.game); out=os.path.abspath(a.out) if a.out else game; ui=UI()
+    if a.game is None and not sys.stdin.isatty(): ap.error('the game folder is required')
+    ui=UI()
     ui.logo(f'v{VERSION} - hi-res patch for Need for Speed SE (DOS)'); ui.p()
     ui.head('Checking your installation')
+    if a.game is None:
+        try: a.game=ask_game(ui)
+        except (KeyboardInterrupt,EOFError): ui.p(); ui.error('aborted, nothing written'); return 130
+    game=os.path.abspath(a.game); out=os.path.abspath(a.out) if a.out else game
     try:
         load_deps()
         exe_bytes,variant=read_exe(game,a.keep_video_mode)
