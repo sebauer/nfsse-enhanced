@@ -32,7 +32,7 @@ all 33 Huffman files of the game. Structure: u24 BE size, clue byte (escape symb
 code-length counts and symbols (delta coded with a "used" bitmap), all integers in the game's
 Elias-gamma-like `getnum`. The clue symbol introduces a run (`getnum` > 0: repeat last byte),
 a literal byte (`0` + bit 0) or end of stream (`0` + bit 1). Note the decoder quirk for numbers
-whose prefix has ≥ 16 zero bits (one extra value bit) — kept for compatibility.
+whose prefix has ≥ 16 zero bits (one extra value bit), kept for compatibility.
 
 ## BAMF blit lists (`masks.py`)
 
@@ -46,8 +46,8 @@ per bank: count u16, count × (src u32, dst u16 (offset in 64K bank), len u16)
 Lists with `xstep = 0x8000` are the half-resolution detail modes. Uncovered areas are holes
 where the game draws directly to video memory (tachometer, map). Files:
 
-- `SIMDATA/MISC/MASKHI.Bvp` — exterior views (v = view size 0..2, p = detail 0..3).
-- `SIMDATA/MISC/MASKHI.MMB` and `SIMDATA/(G)DASH/<car>DH.FMM` — containers (`'wwww'`, count,
+- `SIMDATA/MISC/MASKHI.Bvp`: exterior views (v = view size 0..2, p = detail 0..3).
+- `SIMDATA/MISC/MASKHI.MMB` and `SIMDATA/(G)DASH/<car>DH.FMM`: containers (`'wwww'`, count,
   offset table) of BAMF lists for the cockpit view; the cockpit window mask per car.
 
 `masks.convert` re-pitches a 640-wide list to W (splitting at row ends and 64K banks);

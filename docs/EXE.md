@@ -15,7 +15,7 @@ are refused by the patcher.
 
 The differing byte is the third argument of the mode-set call `0x84d74(w, h, bpp)` in the video
 player `0x341a4` (320×200). `bpp = 0` means the default, 16 bpp (`0x84df1`), so the CD EXE asks for
-320×200 hicolor; the 86f8 variant asks for 320×200×8 — presumably a fix for cards without a
+320×200 hicolor; the 86f8 variant asks for 320×200×8, presumably a fix for cards without a
 320×200×16 mode. `patcher.py` sets this byte on the CD EXE before patching, so both variants
 produce byte-identical (tested) executables.
 
@@ -33,7 +33,7 @@ produce byte-identical (tested) executables.
 ### Fixups
 
 Absolute references go through LE fixup records. **Never patch bytes that are fixup targets
-or sources** — `exe.build` asserts against the fixup source set. To move a table, retarget
+or sources**: `exe.build` asserts against the fixup source set. To move a table, retarget
 its fixups with `exe.relocate_target(d, old_obj4_offset, new_obj4_offset)`. Only 32-bit
 target offsets can be retargeted; 16-bit ones (e.g. the detail table `0xd284`) cannot.
 
@@ -155,13 +155,13 @@ open-road tracks (`[0x4da12] ≤ 2`).
 | Detail 9 / 12 | crash at race start (divide by zero at `0x83cdb`) |
 | Traffic front +30 | visible pop-ins |
 | Traffic rear −11 | police car never appears (placed at −12/−18) |
-| More than 6 traffic cars | three car lists have only 9 slots (`0x5c224` draw, `0x5c274` rank, `0x5c298` order; `0x5c24c` has 10) — too risky |
+| More than 6 traffic cars | three car lists have only 9 slots (`0x5c224` draw, `0x5c274` rank, `0x5c298` order; `0x5c24c` has 10); too risky |
 | Larger horizon artwork | overflows an internal limit |
 | Runtime cockpit scaling, in-game resolution menu | not pursued |
 | AI-upscaled cockpit art | dropped for licensing/consistency; Lanczos from the original art only |
 
 ## Tools
 
-- `le.dis(a, b)` / `python3 nfsse/le.py 2d5dc:2d6b4` — disassembly (needs capstone, dev only).
-- `emu.py` — Unicorn harness that flat-loads the EXE with fixups applied and calls pure routines
+- `le.dis(a, b)` / `python3 nfsse/le.py 2d5dc:2d6b4`: disassembly (needs capstone, dev only).
+- `emu.py`: Unicorn harness that flat-loads the EXE with fixups applied and calls pure routines
   (dev only). Data globals are at `0xE0000 + raw` in emulation.
