@@ -53,18 +53,18 @@ class UI:
             a=s.ask(q,'Y').lower()
             if a in ('y','yes','j','ja'): return True
             if a in ('n','no','nein'): return False
-    def progress(s,labels): return Progress(s,labels)
+    def progress(s,labels,weights=None): return Progress(s,labels,weights)
 def clock(t): t=int(t); return f'{t//60}:{t%60:02d}'
 class Progress:
     SPIN='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
-    def __init__(s,ui,labels):
-        s.ui=ui; s.labels=labels; s.n=len(labels); s.done=0; s.running={}; s.finished=set()
+    def __init__(s,ui,labels,weights=None):   # weights: units per job (files); the bar counts units
+        s.ui=ui; s.labels=labels; s.w=weights or [1]*len(labels); s.n=sum(s.w); s.done=0; s.running={}; s.finished=set()
         s.t0=time.time(); s.tick=0; s.drawn=0; s.wl=max(len(l) for l in labels)
     def start(s,i,t=None):
         if i not in s.finished: s.running[i]=t or time.time()
         s.draw()
     def finish(s,i,dt):
-        s.running.pop(i,None); s.finished.add(i); s.done+=1; s.clear(); ui=s.ui
+        s.running.pop(i,None); s.finished.add(i); s.done+=s.w[i]; s.clear(); ui=s.ui
         mark=ui.c('32','✔' if ui.uni else 'OK') if ui.live else f'[{s.done:{len(str(s.n))}}/{s.n}]'
         ui.p(f'  {mark} {s.labels[i]:<{s.wl}}  {ui.c("2",f"{dt:5.1f}s")}'); s.draw()
     def clear(s):
@@ -79,6 +79,6 @@ class Progress:
         for k,(i,t) in enumerate(sorted(s.running.items(),key=lambda x:x[1])):
             lab=f'{s.labels[i]:<{s.wl}}'[:max(10,w-12)]   # keep every line shorter than the terminal
             lines.append(f'  {ui.c("36",spin[(s.tick+k)%len(spin)])} {lab}  {ui.c("2",f"{now-t:5.1f}s")}')
-        lines.append(f'  {ui.c("32",full*f)}{ui.c("2",empty*(bw-f))} {s.done:>{len(str(s.n))}}/{s.n}  {clock(now-s.t0)}')   # bar stays the bottom line
+        lines.append(f'  {ui.c("32",full*f)}{ui.c("2",empty*(bw-f))} {s.done:>{len(str(s.n))}}/{s.n} files  {clock(now-s.t0)}')   # bar stays the bottom line
         ui.o.write('\n'.join(lines)+'\n'); ui.o.flush(); s.drawn=len(lines)
     def end(s): s.clear(); s.ui.o.flush()

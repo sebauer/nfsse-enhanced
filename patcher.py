@@ -118,7 +118,7 @@ def default_workers(): return max(1,(os.cpu_count() or 2)//2)   # half the cores
 
 def generate(J,workers,ui):
     """run the jobs (in a process pool if workers>1); returns the files written"""
-    made=[]; pr=ui.progress([lab for lab,*_ in J])
+    made=[]; pr=ui.progress([lab for lab,*_ in J],[len(files) for *_,files in J])
     if workers<=1:
         for i,(lab,fn,args,files) in enumerate(J):
             pr.start(i); dt=timed(fn,args); made+=files; pr.finish(i,dt)
@@ -228,7 +228,7 @@ def main(argv=None):
             ui.p('  Nothing written.'); return 0
     except (KeyboardInterrupt,EOFError):
         ui.p(); ui.error('aborted, nothing written'); return 130
-    ui.p(); ui.head('Building '+' and '.join(f'{RES[r][1]}x{RES[r][2]}' for r in res)+f' ({len(J)} jobs, {w} in parallel)')
+    ui.p(); ui.head('Building '+' and '.join(f'{RES[r][1]}x{RES[r][2]}' for r in res)+f' ({sum(len(j[3]) for j in J)} files, {w} parallel processes)')
     ui.info('Options',f'keyboard steering x{a.steer}, view {a.view}')
     if out!=game: ui.info('Output',out)
     for d in {os.path.dirname(os.path.join(out,f)) for *_,files in J for f in files}: os.makedirs(d,exist_ok=True)
