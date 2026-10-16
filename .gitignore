@@ -1,0 +1,24 @@
+# never commit game data or generated game files
+*.EXE
+*.exe
+*.QFS
+*.FSH
+*.FSB
+*.FMM
+*.MMB
+*.B[0-2][0-3]
+*.FFN
+*.iso
+*.ISO
+NFSSE/
+fix.pkl
+*.pkl
+# local working notes for Claude Code (kept outside the repo on purpose)
+CLAUDE.md
+CLAUDE.local.md
+.claude/
+# python / os
+__pycache__/
+*.pyc
+.DS_Store
+_preview/
