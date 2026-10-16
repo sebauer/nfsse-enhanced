@@ -203,6 +203,7 @@ def main(argv=None):
         try: a.game=ask_game(ui)
         except (KeyboardInterrupt,EOFError): ui.p(); ui.error('aborted, nothing written'); return 130
     game=os.path.abspath(a.game); out=os.path.abspath(a.out) if a.out else game
+    ui.p('    Verifying installation ...')
     try:
         load_deps()
         exe_bytes,variant=read_exe(game,a.keep_video_mode)
