@@ -6,6 +6,7 @@ hi-res executables and data files next to the originals (which stay untouched).
 """
 import argparse,hashlib,os,sys,time
 sys.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__file__)),'nfsse'))
+from ui import UI,clock
 VERSION='0.9'
 
 SHA_CD='7d2104a9eae01ca7b74807ab66334e3ce806d7a9ca3057a9f886932533c6f815'    # CD NFS_DOS.EXE = clean install
@@ -80,8 +81,13 @@ def job_masks(misc_in,tag,W,H,misc_out): import masks; masks.build_all(misc_in,t
 def job_ticket(misc_in,tag,W,H,misc_out,name): import tickets; tickets.build_all(misc_in,tag,W,H,misc_out,[name])
 def job_cockpit(tag,W,H,car,src,dst):
     import cockpit; cockpit.SRC,cockpit.OUT=src,dst; cockpit.lanczos(car,tag,W,H)
-def timed(fn,args):
-    t=time.time(); fn(*args); return time.time()-t
+_Q=None   # worker -> main queue: (job index, start time), for the live display
+def _init(q):
+    global _Q; _Q=q
+def timed(fn,args,i=None):
+    t=time.time()
+    if _Q is not None: _Q.put((i,t))
+    fn(*args); return time.time()-t
 
 def jobs(game,out,res,steer,view,exe_bytes,langs):
     """independent jobs (label, function, args, files written), slowest first; each writes only its own files"""
@@ -110,33 +116,42 @@ def jobs(game,out,res,steer,view,exe_bytes,langs):
 
 def default_workers(): return max(1,(os.cpu_count() or 2)//2)   # half the cores: parallel, but leave the machine usable
 
-def generate(J,workers,log=print):
+def generate(J,workers,ui):
     """run the jobs (in a process pool if workers>1); returns the files written"""
-    made=[]
-    def done(k,lab,files,dt):
-        made.extend(files); log(f'[{k:2}/{len(J)}] {lab:<34} {dt:5.1f}s')
+    made=[]; pr=ui.progress([lab for lab,*_ in J])
     if workers<=1:
-        for k,(lab,fn,args,files) in enumerate(J,1): done(k,lab,files,timed(fn,args))
-        return made
-    from concurrent.futures import ProcessPoolExecutor,as_completed
-    with ProcessPoolExecutor(workers) as ex:
-        fut={ex.submit(timed,fn,args):(lab,files) for lab,fn,args,files in J}
+        for i,(lab,fn,args,files) in enumerate(J):
+            pr.start(i); dt=timed(fn,args); made+=files; pr.finish(i,dt)
+        pr.end(); return made
+    import multiprocessing,queue
+    from concurrent.futures import ProcessPoolExecutor,wait,FIRST_COMPLETED
+    ctx=multiprocessing.get_context(); q=ctx.Queue()
+    with ProcessPoolExecutor(workers,mp_context=ctx,initializer=_init,initargs=(q,)) as ex:
+        fut={ex.submit(timed,fn,args,i):i for i,(lab,fn,args,files) in enumerate(J)}; pending=set(fut)
         try:
-            for k,f in enumerate(as_completed(fut),1): done(k,*fut[f],f.result())
+            while pending:
+                fin,pending=wait(pending,timeout=0.1,return_when=FIRST_COMPLETED)
+                while True:
+                    try: pr.start(*q.get_nowait())
+                    except queue.Empty: break
+                for f in fin:
+                    i=fut[f]; dt=f.result(); made+=J[i][3]; pr.finish(i,dt)
+                pr.draw()
         except BaseException:
             for f in fut: f.cancel()
-            raise
-    return made
+            pr.end(); raise
+    pr.end(); return made
 
-def dosbox_notes(res):
-    s=['','DOSBox-X configuration:','  [dosbox]','  machine = svga_s3',
-       '  memsize = 64' if 1280 in res else '  memsize = 32        (64 if you also want 1280x960)']
+def notes(ui,res):
+    ui.head('DOSBox-X configuration (dosbox-x.conf)')
+    ui.p('    [dosbox]'); ui.p('    machine = svga_s3')
+    ui.p('    memsize = 64' if 1280 in res else '    memsize = 32       (64 if you also want 1280x960)')
     if 1280 in res:
-        s+=['  [video]','  allow unusual vesa modes   = true','  vesa modelist width limit  = 1280','  vesa modelist height limit = 1024']
-    s+=['  [cpu]','  cycles = max','',
-        'In the game: Options > Graphic Details > Resolution must be 640x480.',
-        'Start the race with '+' or '.join(f'NFS{r}.EXE' for r in res)+' instead of NFS.EXE.']
-    return '\n'.join(s)
+        for l in ('[video]','allow unusual vesa modes   = true','vesa modelist width limit  = 1280','vesa modelist height limit = 1024'): ui.p('    '+l)
+    ui.p('    [cpu]'); ui.p('    cycles = max')
+    ui.head('In the game')
+    ui.p('    Options > Graphic Details > Resolution must be 640x480.')
+    ui.p('    Start the race with '+' or '.join(f'NFS{r}.EXE' for r in res)+' instead of NFS.EXE.')
 
 def main(argv=None):
     ap=argparse.ArgumentParser(description=f'NFS SE Enhanced v{VERSION} - hi-res patch for Need for Speed SE (DOS)')
@@ -149,26 +164,26 @@ def main(argv=None):
     ap.add_argument('--out',help='write the generated files to this folder instead of the game folder (testing)')
     ap.add_argument('--keep-video-mode',action='store_true',help=argparse.SUPPRESS)   # do not normalise the CD EXE to 86f8
     a=ap.parse_args(argv)
-    game=os.path.abspath(a.game); out=os.path.abspath(a.out) if a.out else game; res=sorted(set(a.res))
+    game=os.path.abspath(a.game); out=os.path.abspath(a.out) if a.out else game; res=sorted(set(a.res)); ui=UI()
+    ui.head(f'NFS SE Enhanced v{VERSION}')
     try:
         load_deps()
         exe_bytes,variant=read_exe(game,a.keep_video_mode)
         langs,cl=languages(game); check_install(game,langs)
     except Refuse as e:
-        print('ERROR:',e,file=sys.stderr); return 1
-    print(f'NFS SE Enhanced v{VERSION}')
-    print(f'game folder : {game}')
-    print(f'NFS.EXE     : {variant}')
-    print(f'language    : {cl or "?"} (NFS.CFG); generating for: {", ".join(langs)}')
-    print('installation: complete')
+        ui.error(str(e)); return 1
+    ui.info('Game folder',game)
+    ui.info('NFS.EXE',variant)
+    ui.info('Language',f'{(cl or "?").title()} (NFS.CFG); generating for: {", ".join(l.title() for l in langs)}')
+    ui.ok('Installation complete')
     if a.check: return 0
-    print(f'options     : {", ".join(f"{r}" for r in res)}; steering x{a.steer}; view {a.view}')
-    if out!=game: print(f'output      : {out}')
     J=jobs(game,out,res,a.steer,a.view,exe_bytes,langs); w=max(1,min(a.jobs,len(J)))
-    print(f'jobs        : {len(J)}, {w} in parallel\n')
-    t=time.time(); made=generate(J,w)
-    print(f'\ndone in {time.time()-t:.0f}s: {len(made)} files written, original files unchanged.')
-    print(dosbox_notes(res))
+    ui.head('Building '+' and '.join(f'{RES[r][1]}x{RES[r][2]}' for r in res)+f' ({len(J)} jobs, {w} in parallel)')
+    ui.info('Options',f'keyboard steering x{a.steer}, view {a.view}')
+    if out!=game: ui.info('Output',out)
+    t=time.time(); made=generate(J,w,ui)
+    ui.ok(f'{len(made)} files written in {clock(time.time()-t)}, original files unchanged')
+    notes(ui,res)
     return 0
 
 if __name__=='__main__': sys.exit(main())
