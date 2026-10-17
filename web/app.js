@@ -240,7 +240,8 @@ function progress(plan) {
 
 // ---------- main flow ----------
 async function main() {
-  await logo('v0.9 - hi-res patch for Need for Speed SE (DOS), in your browser');
+  const version = await fetch(new URL('nfsse/version.py', BASE)).then(r => r.text()).then(t => t.match(/VERSION='([^']+)'/)[1]).catch(() => '?');
+  await logo(`v${version} - hi-res patch for Need for Speed SE (DOS), in your browser`);
   blank();
   if (!window.Worker || !window.WebAssembly) { fail('This browser cannot run the patcher (needs WebAssembly and web workers).'); return; }
 
@@ -317,20 +318,29 @@ async function main() {
   const secs = pr.end();
   window.removeEventListener('beforeunload', guard);
 
+  let download = null;
   if (src.kind === 'fsa') ok(`${total} files written in ${clock(secs)}, original files unchanged`);
   else if (src.kind === 'upload') {
     ok(`${total} files generated in ${clock(secs)}`);
-    const zip = fflate.zipSync(src.out, { level: 6 });
-    const url = URL.createObjectURL(new Blob([zip], { type: 'application/zip' }));
-    const a = link(url, 'nfsse-enhanced-files.zip'); a.download = 'nfsse-enhanced-files.zip'; a.removeAttribute('target');
-    line('    Download ', a, ` (${(zip.length / 1e6).toFixed(0)} MB) and unpack it into the game folder ${src.name},`);
-    line('    merging the folders. Your original files stay untouched.');
+    download = fflate.zipSync(src.out, { level: 6 });
   } else {
     ok(`${total} files generated in ${clock(secs)} (test mode, nothing written)`);
     window.devHashes = src.hashes; console.log('NFSSE_HASHES ' + JSON.stringify(src.hashes));
   }
 
-  blank(); line(['green bold', "  Success! Your game is patched. Start your engines - let's race!"]); blank();
+  blank();
+  line(['green bold', download ? "  Success! Your patch is ready. Unpack it, start your engines - let's race!"
+                               : "  Success! Your game is patched. Start your engines - let's race!"]);
+  blank();
+  if (download) {   // upload mode: the files come as a zip
+    head('Download your patched files');
+    const url = URL.createObjectURL(new Blob([download], { type: 'application/zip' }));
+    const a = link(url, `Download nfsse-enhanced-files.zip (${(download.length / 1e6).toFixed(0)} MB)`);
+    a.download = 'nfsse-enhanced-files.zip'; a.removeAttribute('target'); a.className = 'cmd';
+    line('    ', a);
+    line(`    Unpack it into the game folder ${src.name}, merging the folders. Your original files stay untouched.`);
+    blank();
+  }
   const notes = await first.call('notes', { res });
   for (const l of notes.trimEnd().split('\n')) {
     if (l.startsWith('==> ')) { if (T.lastChild.textContent !== '') blank(); head(l.slice(4)); }

@@ -24,13 +24,14 @@ a { color: var(--cyan); }
 .dim { color: var(--dim); } .bold { font-weight: bold; }
 
 /* buttons look like  [ Select game folder ] */
-button.cmd {
+button.cmd, a.cmd {
   font: inherit; color: var(--cyan); background: none; border: 0; padding: 0 2px; margin: 2px 0 2px 4px;
   cursor: pointer; font-weight: bold;
 }
-button.cmd::before { content: "[ "; color: var(--dim); }
-button.cmd::after { content: " ]"; color: var(--dim); }
-button.cmd:hover:not(:disabled), button.cmd:focus-visible { background: var(--hover); outline: 1px solid var(--cyan); }
+a.cmd { text-decoration: none; display: inline-block; }
+button.cmd::before, a.cmd::before { content: "[ "; color: var(--dim); }
+button.cmd::after, a.cmd::after { content: " ]"; color: var(--dim); }
+button.cmd:hover:not(:disabled), button.cmd:focus-visible, a.cmd:hover, a.cmd:focus-visible { background: var(--hover); outline: 1px solid var(--cyan); }
 button.cmd:disabled { color: var(--dim); cursor: default; }
 
 /* numbered menus: click a line or press its number, Enter takes the default */
