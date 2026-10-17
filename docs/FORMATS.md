@@ -29,6 +29,39 @@ point makes the mirror view one pixel too small and it looks shifted up and left
 The remaining points sit near the top edge (e.g. `y ≈ 46` for the Corvette); their purpose is
 not confirmed (probably positions of small indicator overlays).
 
+## Track texture families (`*TRACKFM/*.FAM`)
+
+`SIMDATA/NTRACKFM/<track>_{T,M,R}01.FAM` and `SIMDATA/ETRACKFM/<track>_001.FAM` (German:
+`GTRACKFM`). A FAM is a `wwww` container (count u32, then absolute u32 offsets; entries follow each
+other without padding) with four parts:
+
+| Part | Content |
+|---|---|
+| 0 | `wwww` of FSH: road, terrain, wall, fence textures (80×40, 80×80, 32×96, 128×256, 179×89, ...) |
+| 1 | `wwww` of FSH, one per roadside object: one `0x7b` shape `0000`, at most 128×128 |
+| 2 | FSH with `!pal` (`0x22`) and `horz`, the horizon (640×110 or 640×130) |
+| 3 | `wwww` with a small 3D object (`ORIP`) and its textures |
+
+The `T`/`M`/`R` variants differ in colours; `ETRACKFM` is close to `R` except for some signs.
+Object sprites use index 255 as transparent. Their palette is found in one of three places: a
+`0x22` attachment behind the shape, listed `!pal`/`!PAL` shapes (`0x24`), or an unlisted `0x22`
+block between the directory and the first shape.
+
+Findings from an experiment with Coastal 1 (2× sprites, not part of the patch):
+
+- **Every object FSH is a multiple of 4 bytes long**; the originals pad with a few bytes behind the
+  directory. An unaligned FSH makes the game abort at race start with
+  `reservemem - INVALID SIZE REQUESTED`.
+- The engine sizes an object by its size in the world, not by its pixels: a sprite with twice the
+  resolution is drawn at the same size.
+- **Sprites larger than 128 pixels** in either dimension freeze the game at race start (black
+  screen). DOSBox-X then logs `voodoo readd unaligned` endlessly: the game reads through a broken
+  pointer into the address range of DOSBox-X's emulated Voodoo card. The limit sits somewhere in
+  the object texture path of the EXE; a memory breakpoint on that range in the DOSBox-X debugger
+  should find it.
+- Within the limit there is little to gain: the objects that can grow are mostly seen from far
+  away, while the blocky ones that come close are already 127–128 pixels tall.
+
 ## QFS / RefPack (`qfs.py`)
 
 EA's LZ77 variant. Header `10 FB` (or `11 FB` with an extra 3-byte compressed size), then the

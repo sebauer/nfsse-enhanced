@@ -169,6 +169,14 @@ Python code unchanged in [Pyodide](https://pyodide.org) web workers.
 Runtime dependencies: Python 3, numpy, Pillow, scipy. `capstone` and `unicorn` are only used
 by the analysis helpers (`le.dis`, `emu.py`, `stackfix.regen`).
 
+## 🔭 Ideas for future development
+
+**Sharper roadside objects.** Trees, signs and buildings along the track could be upscaled from
+the original sprites like the cockpits. Not pursued for now: the engine only accepts object sprites
+up to 128×128 pixels, and the blocky ones that come close (palms, signs, lamp posts) are already
+that large, so a visible gain needs that limit raised deep in the renderer. Details in
+[`docs/FORMATS.md`](docs/FORMATS.md#track-texture-families-trackfmfam).
+
 ## ☕ Support
 
 If the patch brings back some 1996 racing memories, you can
