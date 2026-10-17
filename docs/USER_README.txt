@@ -105,7 +105,7 @@ with them.
   whole screen.
 - HUD bar, map, tachometer, start lights, acceleration display (F8) and replay
   bar are laid out for the wider screen.
-- Cockpits are rescaled from the original artwork to fill the screen.
+- Cockpits are rescaled from the original artwork, keeping their proportions.
 - Pause menu, end-of-race menus, checkpoint menu and videos switch to 640x480
   and are shown full screen.
 - Ticket / warning screens are upscaled to the full resolution.

@@ -24,7 +24,7 @@ everything is rescaled from the game's own files.
   The exterior view uses the whole screen.
 - HUD bar, map, tachometer, start lights, acceleration display (F8) and replay bar are laid out
   for the wider screen.
-- Cockpits are rescaled from the original artwork to fill the screen.
+- Cockpits are rescaled from the original artwork, keeping their proportions.
 - Ticket and warning screens are upscaled to the full resolution.
 - Opponent markers above the cars scale with the resolution.
 - The cockpit-view horizon is drawn across the full width. The original engine dropped horizon

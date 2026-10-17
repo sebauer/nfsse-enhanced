@@ -15,6 +15,23 @@ def resample(pix,nw,nh,pal):
     a=np.array(Image.fromarray(rgba,'RGBA').convert('RGBa').resize((nw,nh),Image.LANCZOS).convert('RGBA'))
     idx=fsh.quant(a[...,:3].reshape(-1,3).astype(np.float32),pal).reshape(nh,nw)
     return np.where(a[...,3]>=128,idx,255).astype(np.uint8)
+DARK=14; DESAT=0.75   # dark colour at the top of the fill; how much the average colour is desaturated
+def fill_top(row,n,pal):
+    """uniform layout: n rows between HUD bar and cockpit, in thirds from top to bottom: a dark neutral colour, a fade
+    from dark to the (desaturated) average colour of the cockpit's first row, a fade from that average into the row.
+    Transparent columns stay transparent (the 3D view shows there)."""
+    if n<=0: return np.zeros((0,len(row)),np.uint8)
+    lum=pal.mean(1); ok=np.ones(256,bool); ok[PAINT]=False; ok[255]=False   # never the car paint (recoloured) or 255
+    P=pal.copy(); P[~ok]=1e9
+    dark=pal[min((i for i in range(256) if ok[i] and lum[i]<=DARK),key=lambda i:((pal[i]-DARK)**2).sum())]   # most neutral
+    opaque=row!=255; rgb=pal[row]
+    avg=rgb[opaque].mean(0) if opaque.any() else dark
+    avg=avg+(avg.mean()-avg)*DESAT   # desaturate, same brightness
+    a=round(n/3); b=round(n/3); c=n-a-b; rows=[]
+    rows+=[np.broadcast_to(dark,rgb.shape)]*a
+    rows+=[np.broadcast_to(dark*(1-t)+avg*t,rgb.shape) for t in ((k+1)/(b+1) for k in range(b))]
+    rows+=[avg*(1-t)+rgb*t for t in ((k+1)/(c+1) for k in range(c))]
+    return np.stack([np.where(opaque,fsh.quant(np.ascontiguousarray(r,np.float32),P),255) for r in rows]).astype(np.uint8)
 def scale_shape(blk,pal,name,g):
     w,h,cx,cy,x,y=struct.unpack_from('<6h',blk,4)
     pix=np.frombuffer(blk,np.uint8,w*h,16).reshape(h,w); att=blk[16+w*h:]
@@ -22,13 +39,13 @@ def scale_shape(blk,pal,name,g):
     for ct,cnx,cb in ch:
         if ct==0x22 and len(cb)>=16+768: pal=np.frombuffer(cb,np.uint8,768,16).reshape(256,3).astype(np.float32)*255/63
     if name==b'dash' and y==0 and h==480:
-        body=resample(pix[32:],round(w*g.SX),g.H-32,pal)
-        npix=np.vstack([np.full((32,body.shape[1]),255,np.uint8),body]); nx,ny=0,0
+        bh=round(448*g.CSY); body=resample(pix[32:],round(w*g.SX),bh,pal)
+        npix=np.vstack([np.full((32,body.shape[1]),255,np.uint8),fill_top(body[0],g.H-bh-32,pal),body]); nx,ny=0,0
     else:
-        npix=resample(pix,max(1,round(w*g.SX)),max(1,round(h*g.SY)),pal); nx,ny=round(x*g.SX),round(g.my(y))
+        npix=resample(pix,max(1,round(w*g.SX)),max(1,round(h*g.CSY)),pal); nx,ny=round(x*g.SX),round(g.my(y))
     nh,nw=npix.shape
     hdr=bytearray(16); hdr[0]=blk[0]
-    struct.pack_into('<6h',hdr,4,nw,nh,round(cx*g.SX),round(cy*g.SY),nx,ny)
+    struct.pack_into('<6h',hdr,4,nw,nh,round(cx*g.SX),round(cy*g.CSY),nx,ny)
     natt=bytearray()
     for ct,cnx,cb in ch:
         cb=bytearray(cb)
@@ -38,7 +55,7 @@ def scale_shape(blk,pal,name,g):
             for k in range(cnt):
                 px,py=struct.unpack_from('<ii',cb,8+8*k)
                 if abs(px)<100000 and abs(py)<100000:
-                    if name!=b'dash': q=(round(px*g.SX),round(py*g.SY))
+                    if name!=b'dash': q=(round(px*g.SX),round(py*g.CSY))
                     elif k==1: q=(round((px+1)*g.SX)-1,round(g.my(py+1))-1)   # mirror rectangle: bottom-right corner is inclusive
                     else: q=(round(px*g.SX),round(g.my(py)))
                     struct.pack_into('<ii',cb,8+8*k,*q)
@@ -115,8 +132,8 @@ def defringe(car,tag):
         if not bad.any(): break
         px[bad]=255; n+=int(bad.sum())
     d[o+16:o+16+w*h]=px.tobytes(); open(p,'wb').write(d); return n
-def lanczos(car,tag,W,H):
-    g=L(W,H); scale_archive(SRC+car+'DH.FSH',OUT+car+'D'+tag+'.FSH',g); defringe(car,tag); window_mask(car,tag,g)
+def lanczos(car,tag,W,H,uniform=True):
+    g=L(W,H,uniform); scale_archive(SRC+car+'DH.FSH',OUT+car+'D'+tag+'.FSH',g); defringe(car,tag); window_mask(car,tag,g)
 CARS={'ANSX':'ansx','CZR1':'czr1','DVIPER':'dviper','F512TR':'f512tr','LDIABL':'diablo','MRX7':'mrx7','P911':'p911','TRAFFC':'traffc','TSUPRA':'tsupra'}
 def build_all(tag,W,H,cars=None,src=None,out=None):
     global SRC,OUT

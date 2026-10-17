@@ -76,8 +76,8 @@ def fix_polygon_fillers(d,rows,SRC):
         fo=le.cfo(v); assert d[fo-2:fo]==b'\x81\xfb' and int.from_bytes(d[fo:fo+4],'little')==0x300,hex(v)
         assert not any(v+i in SRC for i in range(4)); d[fo:fo+4]=rows.to_bytes(4,'little'); n+=1
     return n
-def build(orig_path,out_path,W=1280,H=960,tag='K',vesa=0x22B,steer=1,lod=1,segs=35,cardepth=None,draw=28,near=4,detail=None,force_detail=False,traffic=None,title=True):
-    g=L(W,H); d=bytearray(open(orig_path,'rb').read()) if isinstance(orig_path,str) else bytearray(orig_path)
+def build(orig_path,out_path,W=1280,H=960,tag='K',vesa=0x22B,steer=1,lod=1,segs=35,cardepth=None,draw=28,near=4,detail=None,force_detail=False,traffic=None,title=True,uniform=True):
+    g=L(W,H,uniform); d=bytearray(open(orig_path,'rb').read()) if isinstance(orig_path,str) else bytearray(orig_path)
     SRC=le.sources(le.parse_fixups(bytes(d))); log=[]
     cfo,dfo=le.cfo,le.dfo
     def code(v,fn,n=4):
@@ -163,7 +163,7 @@ def build(orig_path,out_path,W=1280,H=960,tag='K',vesa=0x22B,steer=1,lod=1,segs=
         for i,v in enumerate(vals): struct.pack_into('<i',d,dfo(base+4*i),v)
     put(0xe8868+8,[0,0,W,H,0,0,W,round(320*H/480)])
     put(0xe88e0+8,[0,0,W,H-32,0,32,W,H-32])
-    put(0xe8c80+16,[0,0,W,H,0,32,W,round(320*(H-32)/448)])
+    put(0xe8c80+16,[0,0,W,H,0,32,W,round(g.my(352))-32])   # 3D view height in the cockpit view (orig 320)
     put(0xe8cb4+16,[0,0,W,H-32,0,32,W,H-32])
     for i in range(12):
         fo=dfo(0xe8edc+12*i); o=struct.unpack_from('<i',d,fo)[0]; struct.pack_into('<i',d,fo,round(g.my(o)))

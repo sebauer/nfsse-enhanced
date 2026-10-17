@@ -60,8 +60,13 @@ real VESA cards with 4 KB granularity are fine.
 ### Screen layout (via `layout.L`)
 
 The HUD keeps its original pixel size and is spread over the wider screen using the 1024×768
-reference layout scaled to W×H. `L.SX = W/640`, `L.SY = (H-32)/448`, `L.DXR = W-640`,
-`L.DY = H-480`; `L.my(y)` maps a 480-line cockpit y to the stretched cockpit.
+reference layout scaled to W×H. `L.SX = W/640`, `L.DXR = W-640`, `L.DY = H-480`. The cockpit
+(rows 32..479 of the 640×480 art) is scaled uniformly by `SX` and anchored at the bottom;
+`L.my(y) = CY0 + (y-32)·SX` with `CY0 = H - 448·SX` maps a 480-line cockpit y. The rows between the
+HUD bar and the cockpit (32 at 1280×960, 19 at 1024×768) are filled by `cockpit.fill_top`: a dark
+neutral band, a fade to the desaturated average colour of the cockpit's first row, a fade into
+that row. Up to v0.9 the cockpit was stretched to rows 32..H-1 instead (`L(W, H, uniform=False)`,
+vertical scale `(H-32)/448`, about 3.6 % taller than wide at 1280×960).
 
 | Site | Meaning |
 |---|---|
