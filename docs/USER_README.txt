@@ -17,6 +17,13 @@ stays untouched; the patch adds new executables and new data files.
 
 1. Installing the patch
 -----------------------
+Easiest: open https://sebauer.github.io/nfsse-enhanced/ in your browser,
+select the game folder and choose the options. Nothing to install, nothing is
+uploaded: the patcher runs locally in the browser. Chrome and Edge write the
+new files straight into the game folder; other browsers give you a zip to
+unpack into it.
+
+The download version below does the same from the command line.
 You need a FULL installation of the DOS game (see section 3) and Python 3.9
 or newer. Unpack the patch zip anywhere; it does not have to be in the game
 folder.

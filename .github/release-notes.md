@@ -2,7 +2,9 @@ Unofficial hi-res patch for **The Need for Speed Special Edition** (DOS): races 
 1280×960, longer view and draw distances, more responsive keyboard steering. The patcher generates
 everything from your own installation; no game files are included.
 
-## Install
+**Easiest:** use the [web patcher](https://sebauer.github.io/nfsse-enhanced/) right in your browser, no installation needed.
+
+## Install the download version
 
 You need a **full** DOS installation of the game (setup → *Custom* → all components) and
 **Python 3.9 or newer**. Download `nfsse-enhanced-<version>.zip` below and unpack it anywhere.

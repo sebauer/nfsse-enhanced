@@ -14,11 +14,16 @@ everything is rescaled from the game's own files.
 > Electronic Arts. This repository contains **no game files**: all graphics are generated
 > from the user's own installation.
 
-**Status: v0.9, first release in preparation.** A browser version is planned.
+**Status: v0.9, first release in preparation.**
 
 ## Installation
 
-Download the zip from the [latest release](https://github.com/sebauer/nfsse-enhanced/releases),
+**Easiest: in the browser.** Open the [web patcher](https://sebauer.github.io/nfsse-enhanced/), select your game folder, choose the
+options. Nothing to install; the patcher runs locally in your browser and no game data is
+uploaded anywhere. Chrome and Edge write the new files straight into the game folder, other
+browsers give you a zip to unpack into it.
+
+**Download version:** download the zip from the [latest release](https://github.com/sebauer/nfsse-enhanced/releases),
 unpack it anywhere and start the launcher. You need **Python 3.9 or newer**.
 
 - **Windows:** double-click `nfsse-patcher.bat` (or drag the game folder onto it).
