@@ -1,0 +1,41 @@
+# Browser patcher on GitHub Pages: the site keeps the repository layout (web/, nfsse/, patcher.py),
+# because the page loads the Python sources relative to web/. The root redirects to web/.
+name: Pages
+
+on:
+  push:
+    branches: [main]
+    paths: ['web/**', 'nfsse/**', 'patcher.py', '.github/workflows/pages.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}web/
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build site
+        run: |
+          mkdir -p site/nfsse
+          cp -r web site/
+          cp patcher.py site/
+          cp nfsse/*.py site/nfsse/
+          printf '<!doctype html><meta charset="utf-8"><title>NFS SE Enhanced</title><meta http-equiv="refresh" content="0; url=web/"><a href="web/">NFS SE Enhanced patcher</a>\n' > site/index.html
+          find site -type f | sort
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4
