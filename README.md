@@ -52,12 +52,19 @@ variants, see `docs/EXE.md`), checks that the installation is complete, builds c
 title screen for every installed language and prints the required DOSBox-X settings. Generating
 both resolutions takes about 15 s on a 12-core machine (about 70 s with `--jobs 1`).
 
-## Releasing
+## Requirements for players
 
-Set the version in `nfsse/version.py` (it is also stamped on the title screen), commit, tag the
-commit `v<version>` and push the tag. The release workflow checks that tag and version match,
-smoke-tests the patcher, builds the zip and creates a draft release to review and publish. The
-same tag deploys the web patcher to GitHub Pages (only `v*` tags may deploy there).
+- The **DOS** version, English or German, installed **completely** (setup → *Custom* → all
+  components). The Windows 95 version is not supported.
+- DOSBox-X (`memsize = 64` for 1280×960, plus the VESA settings in the user README). The patch
+  is tested mainly with DOSBox-X; other DOSBox versions may work but are untested.
+
+See [`docs/USER_README.txt`](docs/USER_README.txt) for the full player documentation.
+
+## Documentation
+
+- [`docs/EXE.md`](docs/EXE.md): executable layout, every patch site, rejected experiments
+- [`docs/FORMATS.md`](docs/FORMATS.md): FSH, QFS, Huffman, BAMF, FNTF, directory layout
 
 ## How it works
 
@@ -78,20 +85,6 @@ Helpers: `fsh.py` (FSH archives), `qfs.py` (RefPack), `huff.py` (EA Huffman), `f
 
 Runtime dependencies: Python 3, numpy, Pillow, scipy. `capstone` and `unicorn` are only used
 by the analysis helpers (`le.dis`, `emu.py`, `stackfix.regen`).
-
-## Requirements for players
-
-- The **DOS** version, English or German, installed **completely** (setup → *Custom* → all
-  components). The Windows 95 version is not supported.
-- DOSBox-X (`memsize = 64` for 1280×960, plus the VESA settings in the user README). The patch
-  is tested mainly with DOSBox-X; other DOSBox versions may work but are untested.
-
-See [`docs/USER_README.txt`](docs/USER_README.txt) for the full player documentation.
-
-## Documentation
-
-- [`docs/EXE.md`](docs/EXE.md): executable layout, every patch site, rejected experiments
-- [`docs/FORMATS.md`](docs/FORMATS.md): FSH, QFS, Huffman, BAMF, FNTF, directory layout
 
 ## Support
 
