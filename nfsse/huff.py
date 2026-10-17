@@ -1,5 +1,5 @@
-"""EA Huffman decoder (types 0x30fb..0x35fb), pure Python.
-Re-implemented from the game's own decoder (NFS.EXE 0xaf440), including its quirks."""
+# Decoder for EA's Huffman compression format (types 0x30fb..0x35fb), pure Python.
+# Output is byte-compatible with the game's own decoder
 class _Bits:
     def __init__(s,b,p): s.b=b; s.p=p*8
     def get(s,n):
