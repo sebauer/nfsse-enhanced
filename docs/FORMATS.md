@@ -17,6 +17,18 @@ unless noted.
 
 `fsh.rebuild(d, {name: new_block})` rewrites an archive with replaced blocks.
 
+### Cockpit archives (`SIMDATA/(G)DASH/<car>DH.FSH`)
+
+The full-screen shape `dash` (640×480 at 0,0) carries a `0x7c` point list in 640×480 screen
+coordinates. Points 0 and 1 are the **rear-view mirror rectangle**: top-left `(x0, y0)` and
+bottom-right `(x1, y1)`, both **inclusive** (e.g. Corvette: `(546, 78)`–`(639, 120)`). The engine
+renders the mirror view into this rectangle at runtime, so the mirror needs no EXE patch, and the
+cockpit window mask (`<car>DH.FMM`) leaves it out. When scaling, the inclusive corner must map as
+`round((x1 + 1) · SX) − 1` (and likewise for y via `L.my(y1 + 1) − 1`); scaling it like a plain
+point makes the mirror view one pixel too small and it looks shifted up and left against its frame.
+The remaining points sit near the top edge (e.g. `y ≈ 46` for the Corvette); their purpose is
+not confirmed (probably positions of small indicator overlays).
+
 ## QFS / RefPack (`qfs.py`)
 
 EA's LZ77 variant. Header `10 FB` (or `11 FB` with an extra 3-byte compressed size), then the

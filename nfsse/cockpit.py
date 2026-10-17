@@ -38,7 +38,10 @@ def scale_shape(blk,pal,name,g):
             for k in range(cnt):
                 px,py=struct.unpack_from('<ii',cb,8+8*k)
                 if abs(px)<100000 and abs(py)<100000:
-                    struct.pack_into('<ii',cb,8+8*k,round(px*g.SX),round(g.my(py)) if name==b'dash' else round(py*g.SY))
+                    if name!=b'dash': q=(round(px*g.SX),round(py*g.SY))
+                    elif k==1: q=(round((px+1)*g.SX)-1,round(g.my(py+1))-1)   # mirror rectangle: bottom-right corner is inclusive
+                    else: q=(round(px*g.SX),round(g.my(py)))
+                    struct.pack_into('<ii',cb,8+8*k,*q)
         natt+=cb
     if not ch: natt=bytearray(att)
     hdr[1:4]=((16+nw*nh) if ch else 0).to_bytes(3,'little')

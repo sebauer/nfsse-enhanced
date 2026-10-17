@@ -77,6 +77,7 @@ reference layout scaled to W×H. `L.SX = W/640`, `L.SY = (H-32)/448`, `L.DXR = W
 | *data* `0xe8868`, `0xe88e0` | view records (viewport/buffer rectangles) |
 | *data* `0xe8c80`, `0xe8cb4` | view configs |
 | *data* `0xe8edc + 12*i` | per-car cockpit render heights → `L.my` |
+| (none) | rear-view mirror: its viewport comes from the cockpit's `dash` point list, not from the EXE; see `docs/FORMATS.md` (cockpit archives) |
 | `0x4b0ec…0x4b1fa` | cockpit horizon quad x-guard ±1280 → ±2W (otherwise black/smeared area on the right) |
 
 ### Above 768 lines (1280×960 build)
