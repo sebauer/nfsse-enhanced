@@ -27,8 +27,8 @@ literals. `qfs.pack` is a greedy hash-chain encoder; `qfs.decode` dispatches on 
 ## EA Huffman (`huff.py`)
 
 Types `30 FB` (plain), `31 FB` (+3-byte compressed size), `32 FB` (byte delta), `34 FB`
-(double delta). Re-implemented from the game's decoder (`0xaf440`); verified byte-identical on
-all 33 Huffman files of the game. Structure: u24 BE size, clue byte (escape symbol), canonical
+(double delta). Independent implementation, verified byte-identical against the game's decoder 
+on all 33 Huffman files of the game. Structure: u24 BE size, clue byte (escape symbol), canonical
 code-length counts and symbols (delta coded with a "used" bitmap), all integers in the game's
 Elias-gamma-like `getnum`. The clue symbol introduces a run (`getnum` > 0: repeat last byte),
 a literal byte (`0` + bit 0) or end of stream (`0` + bit 1). Note the decoder quirk for numbers
