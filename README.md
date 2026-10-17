@@ -56,7 +56,8 @@ both resolutions takes about 15 s on a 12-core machine (about 70 s with `--jobs 
 
 Set the version in `nfsse/version.py` (it is also stamped on the title screen), commit, tag the
 commit `v<version>` and push the tag. The release workflow checks that tag and version match,
-smoke-tests the patcher, builds the zip and creates a draft release to review and publish.
+smoke-tests the patcher, builds the zip and creates a draft release to review and publish. The
+same tag deploys the web patcher to GitHub Pages (only `v*` tags may deploy there).
 
 ## How it works
 
