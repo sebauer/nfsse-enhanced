@@ -145,11 +145,9 @@ def generate(J,workers,ui):
 def notes(ui,res):
     ui.head('DOSBox-X configuration (dosbox-x.conf)')
     ui.p(ui.c('2','    Tested mainly with DOSBox-X; other DOSBox versions may work but are untested.'))
-    ui.p('    [dosbox]'); ui.p('    machine = svga_s3')
+    ui.p('    [dosbox]')
     ui.p('    memsize = 64' if 1280 in res else '    memsize = 32       (64 if you also want 1280x960)')
-    if 1280 in res:
-        for l in ('[video]','allow unusual vesa modes   = true','vesa modelist width limit  = 1280','vesa modelist height limit = 1024'): ui.p('    '+l)
-    ui.p('    [cpu]'); ui.p('    cycles = max')
+    ui.p('    Everything else can stay at the DOSBox-X defaults.')
     ui.p(); ui.head('In the game')
     ui.p('    Options > Graphic Details > Resolution must be 640x480.')
     ui.p('    Start the race with '+' or '.join(f'NFS{r}.EXE' for r in res)+' instead of NFS.EXE.')
@@ -158,7 +156,7 @@ def ask_options(ui,a):
     """ask for the build options not given on the command line"""
     ui.p(); ui.head('Build options')
     if a.res is None:
-        a.res=ui.choose('Resolution',[([1024],'1024x768'),([1280],'1280x960   (DOSBox-X: memsize = 64 and VESA settings, shown at the end)'),
+        a.res=ui.choose('Resolution',[([1024],'1024x768'),([1280],'1280x960   (DOSBox-X needs memsize = 64, shown at the end)'),
                                       ([1024,1280],'both (recommended)')],3)
     if a.steer is None:
         a.steer=ui.choose('Keyboard steering (joystick/wheel are not affected)',[(1,'original'),(2,'2x faster (recommended)'),

@@ -80,21 +80,14 @@ is not supported.
 The patch is tested mainly with DOSBox-X. Other DOSBox versions may work but
 are untested.
 
+Only the memory size needs changing in the DOSBox-X configuration:
+
 [dosbox]
-machine                    = svga_s3     (default; needs an SVGA with VESA)
-memsize                    = 64          (1280x960 needs 64 MB: its cockpits are ~5 MB each;
-                                         1024x768 runs with 32 MB; 16 MB is NOT enough)
+memsize = 64      (1280x960 needs 64 MB: its cockpits are ~5 MB each;
+                   1024x768 runs with 32 MB; 16 MB is NOT enough)
 
-[video]   -- only needed for 1280x960 --
-allow unusual vesa modes   = true
-vesa modelist width limit  = 1280
-vesa modelist height limit = 1024
-
-Why: 1280x960 is VESA mode 0x22B, which DOSBox-X only offers with these settings.
-1024x768 (mode 0x105) works with the default settings.
-
-[cpu]
-cycles = max (or auto). 1280x960 draws ~56% more pixels than 1024x768.
+Everything else can stay at the DOSBox-X defaults; both resolutions work
+with them.
 
 
 4. Requirements: in-game settings
