@@ -25,7 +25,8 @@ unpack into it.
 
 The download version below does the same from the command line.
 You need a FULL installation of the DOS game (see section 3) and Python 3.9
-or newer. Unpack the patch zip anywhere; it does not have to be in the game
+or newer (any current version is recommended; 3.9 is the minimum because
+macOS still ships it). Unpack the patch zip anywhere; it does not have to be in the game
 folder.
 
 Windows:       double-click nfsse-patcher.bat, or drag the game folder onto it.

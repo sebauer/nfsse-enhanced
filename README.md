@@ -86,7 +86,8 @@ into the game folder, other browsers give you a zip to unpack into it.
 
 Download the zip from the
 [latest release](https://github.com/sebauer/nfsse-enhanced/releases), unpack it anywhere and start
-the launcher. You need **Python 3.9 or newer**.
+the launcher. You need **Python 3.9 or newer**; any current version is recommended (3.9 is the
+minimum because macOS still ships it).
 
 - **Windows:** double-click `nfsse-patcher.bat` (or drag the game folder onto it).
 - **macOS / Linux:** `sh nfsse-patcher.sh` in the unpacked folder.

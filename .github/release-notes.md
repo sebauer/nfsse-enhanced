@@ -7,7 +7,8 @@ everything from your own installation; no game files are included.
 ## Install the download version
 
 You need a **full** DOS installation of the game (setup → *Custom* → all components) and
-**Python 3.9 or newer**. Download `nfsse-enhanced-<version>.zip` below and unpack it anywhere.
+**Python 3.9 or newer** (any current version is recommended; 3.9 is the minimum because macOS still
+ships it). Download `nfsse-enhanced-<version>.zip` below and unpack it anywhere.
 
 **Windows:** double-click `nfsse-patcher.bat` (or drag the game folder onto it). If Python is
 missing, get it from [python.org](https://www.python.org/downloads/) and tick *Add python.exe to PATH*.
