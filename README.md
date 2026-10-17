@@ -72,12 +72,19 @@ not mix different executables in network or modem races.
 
 ## 🚀 Installation
 
-**Easiest: in the browser.** Open the [web patcher](https://sebauer.github.io/nfsse-enhanced/),
+Three ways, same result: new files next to the originals, which stay untouched. Afterwards start
+the race with `NFS1024.EXE` or `NFS1280.EXE` instead of `NFS.EXE`.
+
+### 🌐 Web patcher (easiest)
+
+Open the [web patcher](https://sebauer.github.io/nfsse-enhanced/),
 select your game folder and choose the options. Nothing to install; the patcher runs locally in
 your browser and no game data is uploaded anywhere. Chrome and Edge write the new files straight
 into the game folder, other browsers give you a zip to unpack into it.
 
-**Download version:** download the zip from the
+### 📦 Download version
+
+Download the zip from the
 [latest release](https://github.com/sebauer/nfsse-enhanced/releases), unpack it anywhere and start
 the launcher. You need **Python 3.9 or newer**.
 
@@ -89,9 +96,7 @@ Pillow). The patcher then asks for the game folder, resolution(s), keyboard stee
 distance, writes the new files next to the originals and prints the DOSBox-X settings.
 [`docs/USER_README.txt`](docs/USER_README.txt) (`README.txt` in the zip) has the details.
 
-Either way, start the race with `NFS1024.EXE` or `NFS1280.EXE` instead of `NFS.EXE`.
-
-### From source
+### 🐍 From source
 
 ```
 python3 -m pip install -r requirements.txt
