@@ -118,11 +118,37 @@ both resolutions takes about 15 s on a 12-core machine (about 70 s with `--jobs 
 
 - The **DOS** version, English or German, installed **completely** (setup → *Custom* → all
   components). The Windows 95 version is not supported.
-- DOSBox-X (`memsize = 64` for 1280×960, plus the VESA settings in the user README). The patch
-  is tested mainly with DOSBox-X; other DOSBox versions may work but are untested.
+- DOSBox-X with the [settings below](#dosbox-x-settings). The patch is tested mainly with
+  DOSBox-X; other DOSBox versions may work but are untested.
 - In the game, *Options → Graphic Details → Resolution* must be set to 640×480.
 
 See [`docs/USER_README.txt`](docs/USER_README.txt) for the full player documentation.
+
+<a id="dosbox-x-settings"></a>
+
+## 🕹️ DOSBox-X settings
+
+In `dosbox-x.conf` (the patcher prints the same at the end):
+
+```ini
+[dosbox]
+# default; needs an SVGA card with VESA
+machine = svga_s3
+# 1280x960 needs 64 MB (its cockpits are ~5 MB each); 1024x768 runs with 32 MB; 16 MB is not enough
+memsize = 64
+
+# only needed for 1280x960: it is VESA mode 0x22B, which DOSBox-X only offers with these settings
+[video]
+allow unusual vesa modes   = true
+vesa modelist width limit  = 1280
+vesa modelist height limit = 1024
+
+[cpu]
+# or auto; 1280x960 draws about 56 % more pixels than 1024x768
+cycles = max
+```
+
+1024×768 (VESA mode 0x105) works with the default video settings.
 
 ## 📚 Documentation
 
