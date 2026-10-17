@@ -1,0 +1,46 @@
+/* Looks like the command-line patcher: dark terminal, monospace, ANSI-like colours. */
+:root {
+  --bg: #0d1117;
+  --fg: #c9d1d9;
+  --dim: #6e7681;
+  --red: #ff5f56;
+  --yellow: #ffbd2e;
+  --green: #3fb950;
+  --blue: #58a6ff;
+  --cyan: #39c5cf;
+  --white: #ffffff;
+  --hover: #161b22;
+  --mono: "Cascadia Mono", "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--fg); }
+body { font: 14px/1.45 var(--mono); }
+main { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
+.line { white-space: pre-wrap; overflow-wrap: anywhere; min-height: 1.45em; }
+.logo { white-space: pre; font-size: min(14px, 1.75vw); line-height: 1.2; overflow: hidden; }
+a { color: var(--cyan); }
+.red { color: var(--red); } .yellow { color: var(--yellow); } .green { color: var(--green); }
+.blue { color: var(--blue); } .cyan { color: var(--cyan); } .white { color: var(--white); }
+.dim { color: var(--dim); } .bold { font-weight: bold; }
+
+/* buttons look like  [ Select game folder ] */
+button.cmd {
+  font: inherit; color: var(--cyan); background: none; border: 0; padding: 0 2px; margin: 2px 0 2px 4px;
+  cursor: pointer; font-weight: bold;
+}
+button.cmd::before { content: "[ "; color: var(--dim); }
+button.cmd::after { content: " ]"; color: var(--dim); }
+button.cmd:hover:not(:disabled), button.cmd:focus-visible { background: var(--hover); outline: 1px solid var(--cyan); }
+button.cmd:disabled { color: var(--dim); cursor: default; }
+
+/* numbered menus: click a line or press its number, Enter takes the default */
+.opt { cursor: pointer; border-radius: 2px; }
+.opt:hover, .opt:focus-visible { background: var(--hover); outline: none; }
+.opt .num { color: var(--cyan); }
+.opt.chosen { color: var(--green); }
+.menu.closed .opt { cursor: default; }
+.menu.closed .opt:not(.chosen) { color: var(--dim); }
+.menu.closed .opt:hover { background: none; }
+
+.spin { color: var(--cyan); }
+input[type=file] { display: none; }
