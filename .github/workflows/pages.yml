@@ -1,4 +1,4 @@
-# Browser patcher on GitHub Pages, deployed with each release tag v* (the github-pages environment only
+# Browser patcher on GitHub Pages, deployed with each release tag v* (the nfsse-enh-web-patcher environment only
 # accepts v* tags; a manual run must be started on a tag). The site keeps the repository layout
 # (web/, nfsse/, patcher.py), because the page loads the Python sources relative to web/.
 # The root redirects to web/.
@@ -22,7 +22,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment:
-      name: github-pages
+      name: nfsse-enh-web-patcher
       url: ${{ steps.deployment.outputs.page_url }}web/
     steps:
       - uses: actions/checkout@v4
