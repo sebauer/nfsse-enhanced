@@ -14,8 +14,6 @@ everything is rescaled from the game's own files.
 > Electronic Arts. This repository contains **no game files**: all graphics are generated
 > from the user's own installation.
 
-**Status: v0.9, first release in preparation.**
-
 ## ✨ What changes
 
 ### 🖥️ Resolution and display
