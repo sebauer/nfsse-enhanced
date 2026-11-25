@@ -132,9 +132,10 @@ Do not mix different executables in network/modem races.
 
 5b. Optional: extended draw distance, detail and traffic
 --------------------------------------------------------
-- Track drawn 44 blocks ahead instead of 28. The view distance key and the
-  graphics option now cycle through 44, the original 28 and the original medium
-  distance (the original shortest one is gone).
+- Track drawn 44 blocks ahead instead of 28. Press F3 during the race to switch
+  between the extended draw distance (44), the original one (28) and the
+  original medium distance. The graphics option in the menu has the same three
+  stages (the original shortest one is gone).
 - Detailed road textures (lane markings etc.) over 12 blocks instead of 4.
 - Walls and roadside scenery appear from 6 blocks instead of 4 (more is not
   possible without deeper engine changes: 8 gives stray polygons, 12 crashes).
