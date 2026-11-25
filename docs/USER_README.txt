@@ -130,8 +130,8 @@ testing, but this is not guaranteed for every replay.
 Do not mix different executables in network/modem races.
 
 
-5b. Optional: extended view distance and traffic
------------------------------------------------------------------
+5b. Optional: extended distant detail and traffic
+-------------------------------------------------
 - Detailed road textures (lane markings etc.) over 12 blocks instead of 4. The
   track itself is drawn as far as in the original (28 blocks).
 - Walls and roadside scenery appear from 6 blocks instead of 4 (more is not
@@ -151,7 +151,7 @@ Do not mix different executables in network/modem races.
 
 6. Known limitations
 --------------------
-- With the extended view distance, the rear-view mirror can render oddly while
+- With the extended distant detail, the rear-view mirror can render oddly while
   driving inside tunnels (only there).
 - Horizons are still the original 640-pixel artwork (larger horizons overflow an
   internal limit; under investigation).

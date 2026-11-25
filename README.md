@@ -5,8 +5,9 @@ Unofficial patch for **The Need for Speed Special Edition** (DOS, 1996).
 Thirty years after the original, I was tired of barely making out the traffic ahead: without a
 proper CRT monitor, 640×480 on a modern screen turns oncoming cars into a few blurry pixels until
 it is almost too late. So this is a gently modernised version that stays true to the retro charm
-of the original. Races run in **1024×768** or **1280×960** with more road and
-roadside detail in the distance, cars that appear further ahead, a tuned traffic window and more responsive keyboard steering.
+of the original. Races run in **1024×768** or **1280×960** with more road and roadside detail in
+the distance, cars that appear further ahead, a tuned traffic window and more responsive keyboard
+steering.
 HUD and cockpits are adapted to the new resolution. No new artwork, no remastered textures:
 everything is rescaled from the game's own files.
 
@@ -43,7 +44,7 @@ build-up rate (and the return to centre). Joystick and wheel are not affected.
 original steering played back fine in testing, but this is not guaranteed for every replay. Do
 not mix different executables in network or modem races.
 
-### 🛣️ View distance and traffic (optional)
+### 🛣️ Distant detail and traffic (optional)
 
 - Detailed road textures (lane markings and so on) cover **12** blocks instead of 4. The track
   itself is drawn as far as in the original (28 blocks).
@@ -61,7 +62,7 @@ not mix different executables in network or modem races.
 
 ### ⚠️ Known limitations
 
-- With the extended view distance, the rear-view mirror can render oddly inside tunnels.
+- With the extended distant detail, the rear-view mirror can render oddly inside tunnels.
 - Horizons are still the original 640-pixel artwork (larger horizons overflow an internal limit).
 - The replay control bar flickers occasionally.
 - Menus are rendered in 640×480 and scaled by DOSBox.
@@ -91,8 +92,8 @@ minimum because macOS still ships it).
 - **macOS / Linux:** `sh nfsse-patcher.sh` in the unpacked folder.
 
 The first run sets up a private Python environment (`.venv` next to the launcher; numpy, scipy,
-Pillow). The patcher then asks for the game folder, resolution(s), keyboard steering and view
-distance, writes the new files next to the originals and prints the DOSBox-X settings.
+Pillow). The patcher then asks for the game folder, resolution(s), keyboard steering and distant
+detail, writes the new files next to the originals and prints the DOSBox-X settings.
 [`docs/USER_README.txt`](docs/USER_README.txt) (`README.txt` in the zip) has the details.
 
 ### 🐍 From source
@@ -106,7 +107,7 @@ python3 patcher.py "<game folder>" --check                # only check the insta
 ```
 
 Options: `--res 1024 1280`, `--steer 1..4` (keyboard steering factor, default 2),
-`--view extended|original` (view distance, car visibility, traffic window; default extended),
+`--view extended|original` (distant detail, car visibility, traffic window; default extended),
 `-y` (no questions, defaults for options not given), `--jobs N` (parallel jobs, default half the
 CPU cores), `--out DIR` (write elsewhere, for testing). The patcher verifies `NFS.EXE` (both known
 variants, see `docs/EXE.md`), checks that the installation is complete, builds cockpits and the

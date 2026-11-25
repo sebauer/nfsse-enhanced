@@ -272,7 +272,7 @@ async function main() {
   const res = await choose('Resolution', [[[1024], '1024x768'], [[1280], '1280x960   (DOSBox-X needs memsize = 64, shown at the end)'], [[1024, 1280], 'both (recommended)']], 3);
   const steer = await choose('Keyboard steering (joystick/wheel are not affected)', [[1, 'original'], [2, '2x faster (recommended)'],
     [3, '3x faster (not recommended: scrubs off too much speed in corners)'], [4, '4x faster (not recommended: scrubs off too much speed in corners)']], 2);
-  const view = await choose('View distance, car visibility and traffic', [['extended', 'extended (recommended)'], ['original', 'original']], 1);
+  const view = await choose('Distant detail, car visibility and traffic', [['extended', 'extended (recommended)'], ['original', 'original']], 1);
 
   const plan = await first.call('plan', { res, steer, view });
   const total = plan.reduce((n, j) => n + j.files.length, 0);
