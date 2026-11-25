@@ -127,7 +127,7 @@ best balance between responsiveness and speed lost to tyre scrub (3x/4x feel
 quicker but scrub off noticeably more speed in corners).
 Note: replays recorded with the original steering played back fine in
 testing, but this is not guaranteed for every replay.
-Do not mix different executables in network/modem races.
+For network and modem races see the known limitations.
 
 
 5b. Optional: extended draw distance, detail and traffic
@@ -144,10 +144,13 @@ Do not mix different executables in network/modem races.
 - Cars ahead are considered up to 80 track segments (was 35), without the
   original depth cut-off, so traffic and opponents no longer pop in late.
 - Traffic: new traffic cars appear 50-60 track segments ahead (was 43-53), and
-  overtaken cars are recycled 19 segments behind you (was 20). Same number of
-  traffic cars, but fewer visible pop-ins and they come around a bit more often.
-  (A tighter rear limit made traffic denser but suppressed the police car, which
-  is placed 12-18 segments behind the player.)
+  overtaken cars are recycled 19 segments behind you (was 20), for fewer visible
+  pop-ins. (A tighter rear limit made traffic denser but suppressed the police
+  car, which is placed 12-18 segments behind the player.)
+- More traffic: open-road races have 7 traffic cars instead of 6, and all 7 are
+  on the road at the same time (the original kept at most 4 of its 6 active).
+  7 is the maximum: the engine is laid out for 10 cars in total (player,
+  opponent, police, 7 traffic cars).
 - Cars switch to their low-poly model at twice the original distance (ahead:
   0x1900 -> 0x3200; mirror: 0xa00 -> 0x1400, hidden beyond 0x4200).
 
@@ -161,6 +164,11 @@ Do not mix different executables in network/modem races.
 - Switching the resolution with F2 during a race is not supported: the picture
   is drawn incorrectly and the viewport is distorted. This will not be fixed.
 - The replay control bar flickers occasionally.
+- Replays saved without the raised traffic count (the original game or earlier
+  versions of this patch) cannot be loaded by an executable with seven traffic
+  cars (extended view): the game crashes. New replays work.
+- Network and modem races are untested. If they work at all, then only between
+  identically patched versions (same patch version, same options).
 - Menus are rendered in 640x480 and scaled by DOSBox.
 - Every engine limit found so far that was hard-wired to 768 screen lines has been
   raised to 1024 lines; resolutions above 1024 lines would need further work.

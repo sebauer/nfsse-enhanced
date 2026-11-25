@@ -17,7 +17,7 @@ VIDEO_BPP=0x607e6   # code 0x341e6: video player mode set 320x200, bpp 0 (=16, h
 
 RES={1024:('J',1024,768),1280:('K',1280,960)}   # tag, W, H (1280: VESA mode 0x22B, exe.build default)
 # draw=44 is the maximum (docs/EXE.md, "Draw distance above 28")
-VIEW={'extended':dict(lod=2,segs=80,cardepth=0x7fff0000,draw=44,near=12,detail=6,traffic=(50,6,13)),
+VIEW={'extended':dict(lod=2,segs=80,cardepth=0x7fff0000,draw=44,near=12,detail=6,traffic=(50,6,13),traffic_cars=7,traffic_active=7),
       'original':dict(lod=1,segs=35,cardepth=None,draw=28,near=4,detail=None,traffic=None)}
 LANG={'ENGLISH':('ART','DASH'),'GERMAN':('GART','GDASH')}   # (FRONTEND/<art>, SIMDATA/<dash>)
 

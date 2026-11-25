@@ -158,8 +158,77 @@ the limit (release: 80) and replaces the global depth cull `0x5a00` (`0x66d26`; 
 `0x77f98`, per player segment s: spawn at `s + front + rand(0..10)` (front imm8 `0x77fb9`, 43),
 inner rear `s - 12` (`0x77fbc`), outer front `+11` (`0x7808b`), outer rear `-8` (`0x7809f`).
 Release: front 50, inner rear 6, outer rear 13 → recycled 19 behind. The police car is placed
-at s−12/s−18, so the rear limit must stay ≥ 19. Six traffic cars (`0x36dd9 mov ecx,6`), only on
-open-road tracks (`[0x4da12] ≤ 2`).
+at s−12/s−18, so the rear limit must stay ≥ 19. Originally six traffic cars (`0x36dd9`, imm of `mov ecx,6`), only on
+open-road tracks (`[0x4da12] ≤ 2`). Of the six, four are on the road at a time. Release:
+`traffic_cars=7`, `traffic_active=7`, see "Car slots".
+
+### Car slots
+
+Read from the code (86f8) and checked with the Unicorn harness where noted. `traffic_cars=7`, `traffic_active=7`
+are release options of the extended view and tested in game: noticeably more traffic (impression, not counted), new
+replays work, loading an old replay crashes. Network games are untested. Addresses are *data* unless marked otherwise. Cars in an open-road race against one opponent: player (0),
+opponent (1), police (always 2, pointer `0x5c254`), traffic from 3 on. Counts: `[0x4da30]` humans, `[0x4da2c]`
+racers, `[0x4da34]` police, `[0x4da3c]` traffic, `[0x4da38]` total = racers + police + traffic (computed at code
+`0x496f7` / `0x499a8` through a pointer to the race description `0x4da0c`, 0x348 bytes, which is also what a network
+game sends and a replay file stores). The loops over the cars use the total, not a constant. Cars themselves are
+heap blocks of 0x79a bytes (`0x513b1`); the car number is at `+0x516` and `+0x47d`.
+
+**How many traffic cars are on the road.** Six slots exist (`0x36dd9`), but `[0x7d2f0]` = 4 limits how many are
+active: a car that leaves the traffic window gets state 6 (`+0x512`), a random delay and `[0x7d480]` (cars waiting)
+is incremented (code `0x7cef5`); when the delay ends it only returns if `traffic - [0x7d2f0] < [0x7d480]` (code
+`0x7e1ad`), so once two cars are waiting, two of the six stay parked and four drive. The 4 is the default written by `0x63f50` (immediate at
+code `0x63fb1`, `mov [eax+0x34],4`; the struct is `0x7d2bc`). The parser for a `traffic.cfg` (code `0x7e20c`) that
+would overwrite it is never called and the file does not exist.
+
+**The engine is laid out for 10 cars**, one more than it uses: per-car palette ranges `0x16ea0` / `0x16ec8` /
+`0x16ef0` (10 entries; car 9 = colours `0x90..0x97`), shape pointers `0x693a4` (10), the tables copied by code
+`0x80ab0` / `0x80ad4` (10), `0x17798` (11), and a replay key frame has room for 2 x 10 list entries. Everything
+else that is indexed by car number or list position has 9 slots:
+
+| Table | Slots | Fixups | Behind it | `traffic_cars=7` |
+|---|---|---|---|---|
+| `0x5c224` drawn cars (count `[0x5c220]`) | 9 | 3 | `0x5c248`, a car pointer | moved, 16 slots |
+| `0x5c24c` car pointers | 9 | 193, plus `0x5c250`..`0x5c268` addressed one by one | `0x5c270`, pointer to car 1 | grows in place over `0x5c270` |
+| `0x5c270` pointer to car 1; also rank - 4 (code `0x51ea2`, `0x5d3af`) | | 6 | | moved, stays 4 bytes below the rank list |
+| `0x5c274` rank (with `0x5c26c` = rank - 8, `0x5c278`, word `0x5c290`) | 9 | 13 | `0x5c298` | moved, 16 slots |
+| `0x5c298` order (with `0x5c294` = order - 4, `0x5c29c`) | 9 | 20 | `0x5c2bc`, unrelated | moved, 16 slots |
+| `0x4dce4` car models (inside the race description) | 9 | 14 | `0x4dd08` "police present", 14 fixups | `0x4dd08` moved, list grows in place |
+| `0x6e5bc` bytes, palette entry per car | 9 | 10 | `0x6e5c5`, flags cleared every frame | moved |
+| `0x4bd33` bytes, position per car (code `0x2e440`) | 9 | 2 | `0x4bd3c` | moved |
+| records of 0x1d2 bytes from `0x6ea80` (times, position at `+0x1ca`); `0x6ea74`..`0x6ea7c` in front are variables *and* biased bases | 9 | 99 in `0x6ea74`..`0x6fadf`, 22 targets | `0x6fae2` (the fixup to `0x6fae0` is `word 0x6fae2` read as a dword) | moved as one range, 10 records |
+| replay key frame (162 bytes, 20 from `0x63eec`): order at +0, rank at +0x24, next field at +0x50 | 9 + 9 | `0x63f10` reader, `0x63f0c` writer (base - 4) | | rank at +0x28 |
+| replay key frame, cars that are not human: 8 x 0x172 bytes per key frame (stride `0xb90`, code `0x5d07c`, `0x5d28a`), 16 key frames, buffer `[0x16b98]` 0x15e00 bytes (code `0x5ddcb`, saved/loaded at `0x5c443` / `0x5c562`) | 8 | none | end of the heap block | stride `0xd02`, buffer 0x17520 |
+| stack of code `0x7a040` (traffic AI): lane masks, one per list position, at `[esp]`, 8 lane counters at `[esp+0x24]`; the masks are read by `0x78c88` | 9 | none | the counters | frame 0x9c -> 0xc4, masks at `[esp+0x9c]` |
+| `0x7d490` AI data pointers (cleared for every car at code `0x7dec5`) | 9 | 9, base - 4 mixed with the variable `0x7d48c` | `0x7d4b4`, written once before that loop and never read | left alone: the tenth zero lands on `0x7d4b4` |
+| `0x693a4`, `0x16ea0`, `0x16ec8`, `0x16ef0`, `0x17798`, tables in `0x80ab0` / `0x80ad4` | 10 or 11 | | | fit |
+
+Only indexed by racers or humans (at most 8), so not affected: participants `0x4da48 + 0x4b*i`, `0x4dca0`, `0x4dcc0`,
+`0x5c194` (9, constant loop), `0x4d950`, the dots of the track map `0x5d5e8`, result records `0x7cb68 + 0x95*i`,
+the replay data of human cars. Traffic cars read past some of them (`0x4da53 + 0x4b*i` at code `0x51290`), which
+they already do today; nothing is written there.
+
+`exe.more_traffic` (build option `traffic_cars`, 6 = off, 7 = maximum) makes the changes in the last column and sets
+the count at `0x36dd9`. All moves are fixup retargets (169 fixups, 36 targets) into two new obj4 blocks; code
+changes: `0x36dd9`, `0x5c444`, `0x5c563`, `0x5d07e`, `0x5d28c`, `0x5ddcc`, `0x7a048`, `0x7aeab` (immediates),
+`0x7a0bb`..`0x7a0d5` (the loop offset `edx` starts at 0x9c instead of 0) and `0x7abda`..`0x7abf4` (argument set-up
+for `0x78c88`, rewritten shorter with the mask pointer `esp+0x9c`). `traffic_active` (4 = off) patches `0x63fb1`
+and works without `traffic_cars` too: `traffic_active=6` alone is a one-byte change.
+
+Emulated with the built EXE and 10 cars: list sort `0x518c0`, key frame snapshot and restore (frames 0, 15, 19),
+the position loop `0x2e40e`, model selection `0x653a4` (7 different traffic models out of 12), the per-car replay
+record `0x5d0e4` (last byte written = buffer size), the first loop of `0x7a040` (masks and counters separate, saved
+registers intact). No fixup is left that points into a vacated range.
+
+Known consequences and open points:
+
+- Replay files and network games are not compatible between an EXE with `traffic_cars=7` and any other: the key
+  frame layout, the replay buffer size and the car count differ. Loading an old replay crashes (tested). Network games are
+  untested. "Police present" (`0x4dd08`) is no longer part of
+  the race description, so a replay loaded from a file takes it from the last race of the session.
+- Not analysed in the code beyond the tables above: limits inside the renderer (polygons, sprites, shadows for one more car),
+  per-car sound, memory for the tenth car model, the palette range `0x90..0x97` on every track.
+- Car 9 is released by the start logic a little later than car 8 (code `0x7e19d`: leading racer past segment
+  `16*n + 15`).
 
 ### Track rendering internals
 
@@ -269,7 +338,7 @@ normalises z. Tested in game with 44 blocks and the stages 44/28/medium.
 | Detail 9 / 12 | crash at race start (divide by zero at `0x83cdb`) |
 | Traffic front +30 | visible pop-ins |
 | Traffic rear −11 | police car never appears (placed at −12/−18) |
-| More than 6 traffic cars | three car lists have only 9 slots (`0x5c224` draw, `0x5c274` rank, `0x5c298` order; `0x5c24c` has 10); too risky |
+| More than 7 traffic cars | not tried; would need the 10-entry tables and the replay key frame format extended, see "Car slots" |
 | Larger horizon artwork | overflows an internal limit |
 | Runtime cockpit scaling, in-game resolution menu | not pursued |
 | AI-upscaled cockpit art | dropped for licensing/consistency; Lanczos from the original art only |

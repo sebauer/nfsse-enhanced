@@ -103,6 +103,54 @@ def far_track(d,draw,SRC,cap=2060):
     for v in (0x59d67,0x5a055): put(v,MIP_ORIG,MIP_CLAMP)
     nb=add_obj4_block(d,cap*12); assert relocate_target(d,0x62578,nb)==4
     return nb
+def relocate_range(d,lo,hi,new):
+    """move every fixup target in [lo,hi) (obj4 offsets) to new+(target-lo); returns {old target: fixup count}"""
+    T=sorted({t-0xE0000 for s,t,k in le.parse_fixups(bytes(d)) if lo<=t-0xE0000<hi})
+    return {t:relocate_target(d,t,new+t-lo) for t in T}
+# the engine is laid out for 10 cars at most (palette ranges 0x16ea0/0x16ec8/0x16ef0, shapes 0x693a4, the two
+# 10-entry tables read by 0x80ab0/0x80ad4, 20 list slots in a replay key frame): 7 traffic cars + player +
+# opponent + police. Tested in game, see docs/EXE.md "Car slots".
+TRAFFIC_MAX=7
+AI_ARGS_ORIG=bytes.fromhex('8d44245c'+'50'+'8d442454'+'8d4c2478'+'50'+'8d44244c'+'8d542408'+'50'+'89fb'+'89f0')
+AI_ARGS_NEW=bytes.fromhex('8d442444'+'8d4818'+'51'+'8d480c'+'51'+'50'+'8d4830'+'8d5058'+'89fb'+'89f0'+'90909090')
+def more_traffic(d,cars,SRC):
+    """raise the number of traffic cars on open roads from 6 to `cars` (total 9 -> cars+3). Everything indexed by
+    car number or list position that has only 9 slots is moved or grown:
+    - lists 0x5c224 (drawn), 0x5c274 (rank), 0x5c298 (order) and the variable 0x5c270 (which is also the base of
+      the rank list - 4) go to a new block, so the car pointers 0x5c24c can grow in place over 0x5c270
+    - the variable 0x4dd08 behind the model list 0x4dce4, the byte lists 0x6e5bc and 0x4bd33
+    - the per-car records (9 x 0x1d2 bytes from 0x6ea80, with the three dwords in front of them, which are
+      also used as biased bases)
+    - replay key frame: the rank list moves 4 bytes up inside the frame (order 10 + rank 10 slots); the cars
+      that are not human get cars+2 instead of 8 slots of 0x172 bytes per key frame (16 key frames)
+    - 0x7a040 keeps one lane mask per car in a stack array of 9 dwords at [esp], directly below 8 counters:
+      frame 0x9c -> 0xc4, masks at [esp+0x9c] (the loop offset edx starts at 0x9c; the pointer for 0x78c88)"""
+    assert 6<cars<=TRAFFIC_MAX
+    def put(v,old,new):
+        fo=le.cfo(v); assert d[fo:fo+len(old)]==old,hex(v); assert not any(v+i in SRC for i in range(len(old))),hex(v)
+        assert len(new)==len(old); d[fo:fo+len(new)]=new
+    I=lambda n:struct.pack('<I',n)
+    put(0x36dd8,b'\xb9'+I(6),b'\xb9'+I(cars))
+    nb=add_obj4_block(d,0x100); D,R,O,S=nb,nb+0x48,nb+0x8c,nb+0xd0     # 16 slots per list; R-8..R-1: biased bases
+    moved=[(0x5c224,D,3),(0x5c26c,R-8,1),(0x5c270,R-4,6),(0x5c274,R,8),(0x5c278,R+4,3),(0x5c290,R+0x1c,1),
+           (0x5c294,O-4,1),(0x5c298,O,16),(0x5c29c,O+4,3),(0x4dd08,S,14),(0x6e5bc,S+0x10,10),(0x4bd33,S+0x20,2),
+           (0x63f10,0x63f14,1),(0x63f0c,0x63f10,1)]      # key frame rank list: reader first, then the writer (base - 4)
+    for old,new,n in moved:
+        got=relocate_target(d,old,new); assert got==n,(hex(old),got)
+    recs=add_obj4_block(d,0xc+(cars+3)*0x1d2)
+    got=relocate_range(d,0x6ea74,0x6fae0,recs)       # 0x6fae0 itself is `word ptr 0x6fae2` read as a dword
+    assert len(got)==22 and sum(got.values())==99,got
+    slots=cars+2; size=0xa500+16*slots*0x172
+    for v in (0x5d07c,0x5d28a): put(v,b'\x69\xd2'+I(0xb90),b'\x69\xd2'+I(slots*0x172))
+    put(0x5ddcb,b'\x68'+I(0x15e00),b'\x68'+I(size))
+    for v in (0x5c443,0x5c562): put(v,b'\xba'+I(0x15e00),b'\xba'+I(size))
+    put(0x7a046,bytes.fromhex('81ec9c000000'),bytes.fromhex('81ecc4000000'))
+    put(0x7aea9,bytes.fromhex('81c49c000000'),bytes.fromhex('81c4c4000000'))
+    put(0x7a0bb,b'\x31\xff',b'\x31\xd2')                                       # xor edi,edi -> xor edx,edx
+    put(0x7a0c3,bytes.fromhex('89bc2490000000'),bytes.fromhex('89942490000000'))   # mov [esp+0x90],edi -> ,edx
+    put(0x7a0d4,b'\x31\xd2',b'\xb2\x9c')                                       # xor edx,edx -> mov dl,0x9c
+    put(0x7abda,AI_ARGS_ORIG,AI_ARGS_NEW)
+    return nb,recs,moved,got
 def fix_polygon_fillers(d,rows,SRC):
     n=0
     for v,b in stackfix.patches(lambda v:bytes(d[le.cfo(v):le.cfo(v)+4]),rows):
@@ -113,7 +161,7 @@ def fix_polygon_fillers(d,rows,SRC):
         fo=le.cfo(v); assert d[fo-2:fo]==b'\x81\xfb' and int.from_bytes(d[fo:fo+4],'little')==0x300,hex(v)
         assert not any(v+i in SRC for i in range(4)); d[fo:fo+4]=rows.to_bytes(4,'little'); n+=1
     return n
-def build(orig_path,out_path,W=1280,H=960,tag='K',vesa=0x22B,steer=1,lod=1,segs=35,cardepth=None,draw=28,near=4,detail=None,force_detail=False,traffic=None,title=True,uniform=True):
+def build(orig_path,out_path,W=1280,H=960,tag='K',vesa=0x22B,steer=1,lod=1,segs=35,cardepth=None,draw=28,near=4,detail=None,force_detail=False,traffic=None,title=True,uniform=True,traffic_cars=6,traffic_active=4):
     g=L(W,H,uniform); d=bytearray(open(orig_path,'rb').read()) if isinstance(orig_path,str) else bytearray(orig_path)
     SRC=le.sources(le.parse_fixups(bytes(d))); log=[]
     cfo,dfo=le.cfo,le.dfo
@@ -216,6 +264,11 @@ def build(orig_path,out_path,W=1280,H=960,tag='K',vesa=0x22B,steer=1,lod=1,segs=
     car_draw_segments(d,segs,cardepth)
     if detail or draw>28 or near>4: grow_track_vertex_buffers(d)
     if draw>28: log.append(('far_track',draw,hex(far_track(d,draw,SRC))))
+    # more traffic cars / more of them active at the same time (docs/EXE.md "Car slots")
+    if traffic_cars!=6: log.append(('more_traffic',traffic_cars)+tuple(hex(x) for x in more_traffic(d,traffic_cars,SRC)[:2]))
+    if traffic_active!=4:
+        assert 1<=traffic_active<=traffic_cars
+        raw(0x63fae,'c7403404000000','c74034%02x000000'%traffic_active)   # [0x7d2f0], see docs/EXE.md
     if title:   # title screen with the patch credit line (FRONTEND/(G)ART/TITLEE.QFS)
         for v in (0xe2974,0xe4454):
             fo=dfo(v); assert d[fo:fo+12]==b'title.qfs\0\0\0',hex(v); d[fo:fo+11]=b'titlee.qfs\0'
