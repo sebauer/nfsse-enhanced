@@ -66,6 +66,8 @@ not mix different executables in network or modem races.
 
 - With the extended view, the rear-view mirror can render oddly inside tunnels.
 - Horizons are still the original 640-pixel artwork (larger horizons overflow an internal limit).
+- Switching the resolution with **F2** during a race is not supported: the picture is drawn incorrectly
+  and the viewport is distorted. This will not be fixed.
 - The replay control bar flickers occasionally.
 - Menus are rendered in 640×480 and scaled by DOSBox.
 - Every engine limit found so far that was hard-wired to 768 screen lines has been raised to 1024

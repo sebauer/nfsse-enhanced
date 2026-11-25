@@ -158,6 +158,8 @@ Do not mix different executables in network/modem races.
   driving inside tunnels (only there).
 - Horizons are still the original 640-pixel artwork (larger horizons overflow an
   internal limit; under investigation).
+- Switching the resolution with F2 during a race is not supported: the picture
+  is drawn incorrectly and the viewport is distorted. This will not be fixed.
 - The replay control bar flickers occasionally.
 - Menus are rendered in 640x480 and scaled by DOSBox.
 - Every engine limit found so far that was hard-wired to 768 screen lines has been
