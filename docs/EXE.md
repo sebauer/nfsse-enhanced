@@ -354,6 +354,30 @@ its polygon emission `0x5a4f0` with stubbed draw calls: 10 flat polygons per blo
 texture level 3 from distance 21 on. Nothing in `0x59d3c` limits the distance; the projection `0x94c80`
 normalises z. Tested in game with 44 blocks and the stages 44/28/medium.
 
+### Polygon drawing path (GPU research, shelved)
+
+Static reading only, nothing patched or run. Written down for a possible Glide (3dfx) back end.
+
+All 3D drawing ends in a small set of polygon routines of EA's shape library (`0x8fad0`..`0x91c68`). They take an
+FSH shape (type `0x7b`; shapes of type `0x45` are relabelled to `0x7b` for the call and back again) and a vertex list.
+They are called from two places only:
+
+| Caller | Route |
+|---|---|
+| Track | four function pointers `[0x4c0d8]`, `[0x4c0dc]`, `[0x4c0e0]`, `[0x4c0e4]`, called from `0x593fc`, `0x596f5`, `0x59772`, `0x352cc`, `0x5964c`, `0x59f3d`, `0x5a41a`. Filled with `0x35090`, `0x34ed8`, `0x34f1c`, `0x350d4` at `0x58bca`, `0x58c17`, `0x58dab` (three setters, probably detail or texture modes, not traced). The wrappers at `0x34e00`..`0x35118` choose the library routine. |
+| 3D objects (cars, scenery objects) | `0x98482` dispatches per polygon through the table `[0x465d8]` (15 entries, `0xaaae7`..`0xab76b`), index = bits 3..6 of the polygon flags; flags `0x1000`/`0x2000` select a second group from `[0x465f0]` |
+
+`0x91cee` is a clip/visibility test on the screen-space vertices before the draw (`0x593b8`). There is no z-buffer: the order of the calls is the painter's order (far track blocks from the back, then the near zone), so a back end that draws in call order keeps the visibility.
+
+A Glide back end would replace these routines (about 20 entry points) with triangle submission, upload the FSH
+shapes as 8-bit paletted textures, and draw HUD, cockpit and menus through the linear frame buffer.
+
+Shelved, because the target hardware does not help (state of 2026-11): DOSBox-X (`voodoo_card`) and DOSBox Staging
+emulate a Voodoo 1. No documented option renders Glide above the resolution the game requests, and OpenGL mode in
+DOSBox-X is reported to stay at 640×480. Higher resolutions would need DOSBox-X Glide passthrough (`glide=true`) and a
+Glide wrapper on the host: dgVoodoo or nGlide on Windows, OpenGlide compiled by hand on macOS (SDL1 build only). Glide
+itself is under the 3DFX GLIDE Source Code General Public License; shipping `GLIDE2X.OVL` was not checked.
+
 ## Rejected / failed experiments
 
 | Idea | Result |
