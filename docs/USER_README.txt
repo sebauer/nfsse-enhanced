@@ -7,7 +7,7 @@ Thirty years after the original, I was tired of barely making out the traffic
 ahead: without a proper CRT monitor, 640x480 on a modern screen turns oncoming
 cars into a few blurry pixels until it is almost too late. So this is a gently
 modernised version that stays true to the retro charm of the 1996 original:
-higher resolution, more road and roadside detail in the distance, cars that
+higher resolution, longer draw distance, more roadside detail, cars that
 appear further ahead and more responsive keyboard steering. No new artwork, no remastered
 textures: everything is rescaled from the game's own files.
 
@@ -130,10 +130,12 @@ testing, but this is not guaranteed for every replay.
 Do not mix different executables in network/modem races.
 
 
-5b. Optional: extended distant detail and traffic
--------------------------------------------------
-- Detailed road textures (lane markings etc.) over 12 blocks instead of 4. The
-  track itself is drawn as far as in the original (28 blocks).
+5b. Optional: extended draw distance, detail and traffic
+--------------------------------------------------------
+- Track drawn 44 blocks ahead instead of 28. The view distance key and the
+  graphics option now cycle through 44, the original 28 and the original medium
+  distance (the original shortest one is gone).
+- Detailed road textures (lane markings etc.) over 12 blocks instead of 4.
 - Walls and roadside scenery appear from 6 blocks instead of 4 (more is not
   possible without deeper engine changes: 8 gives stray polygons, 12 crashes).
 - Track vertex buffers enlarged 4x and the scenery-object limit raised from
@@ -151,7 +153,7 @@ Do not mix different executables in network/modem races.
 
 6. Known limitations
 --------------------
-- With the extended distant detail, the rear-view mirror can render oddly while
+- With the extended view, the rear-view mirror can render oddly while
   driving inside tunnels (only there).
 - Horizons are still the original 640-pixel artwork (larger horizons overflow an
   internal limit; under investigation).

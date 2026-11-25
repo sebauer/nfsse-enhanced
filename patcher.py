@@ -16,8 +16,8 @@ SHA_86='86f80829727fd311387a69c55613a3332de4a2df27a350502d9bce1d1011df6a'    # v
 VIDEO_BPP=0x607e6   # code 0x341e6: video player mode set 320x200, bpp 0 (=16, hicolor) in the CD EXE, 8 in 86f8
 
 RES={1024:('J',1024,768),1280:('K',1280,960)}   # tag, W, H (1280: VESA mode 0x22B, exe.build default)
-# draw stays 28: more breaks the engine (docs/EXE.md, "Draw distance above 28")
-VIEW={'extended':dict(lod=2,segs=80,cardepth=0x7fff0000,draw=28,near=12,detail=6,traffic=(50,6,13)),
+# draw=44 is the maximum (docs/EXE.md, "Draw distance above 28")
+VIEW={'extended':dict(lod=2,segs=80,cardepth=0x7fff0000,draw=44,near=12,detail=6,traffic=(50,6,13)),
       'original':dict(lod=1,segs=35,cardepth=None,draw=28,near=4,detail=None,traffic=None)}
 LANG={'ENGLISH':('ART','DASH'),'GERMAN':('GART','GDASH')}   # (FRONTEND/<art>, SIMDATA/<dash>)
 
@@ -164,7 +164,7 @@ def ask_options(ui,a):
                                       (3,'3x faster (not recommended: scrubs off too much speed in corners)'),
                                       (4,'4x faster (not recommended: scrubs off too much speed in corners)')],2)
     if a.view is None:
-        a.view=ui.choose('Distant detail, car visibility and traffic',[('extended','extended (recommended)'),('original','original')],1)
+        a.view=ui.choose('Draw distance, detail, car visibility and traffic',[('extended','extended (recommended)'),('original','original')],1)
 
 def clean_path(s):
     """a folder typed or dragged into the terminal: macOS escapes spaces (mac\\ data), Windows adds quotes"""
@@ -187,7 +187,7 @@ def main(argv=None):
     ap.add_argument('game',nargs='?',help='game folder (contains NFS.EXE); asked for if missing')
     ap.add_argument('--res',type=int,nargs='+',choices=sorted(RES),help='resolution(s) to build (default: both)')
     ap.add_argument('--steer',type=int,choices=(1,2,3,4),help='keyboard steering speed factor, 1 = original (default: 2)')
-    ap.add_argument('--view',choices=sorted(VIEW),help='extended distant detail, car visibility and traffic window, or original (default: extended)')
+    ap.add_argument('--view',choices=sorted(VIEW),help='extended draw distance, detail, car visibility and traffic window, or original (default: extended)')
     ap.add_argument('-y','--yes',action='store_true',help='do not ask: use the defaults for options not given')
     ap.add_argument('--check',action='store_true',help='only check the installation, write nothing')
     ap.add_argument('--jobs',type=int,default=default_workers(),help=f'parallel jobs (default: half the CPU cores, here {default_workers()})')

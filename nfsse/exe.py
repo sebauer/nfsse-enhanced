@@ -66,6 +66,43 @@ def extend_detail_table(d,draw):
     fo=le.cfo(0x4f04d); assert d[fo]==0xba; d[fo]=0xe8; struct.pack_into('<i',d,fo+1,CAVE-(0x4f04d+5))
     for v,b in ((0x4f73f,'c1e007'),(0x4f851,'c1e207')):
         fo=le.cfo(v); assert d[fo:fo+3].hex()==b,hex(v); d[fo+2]=8
+# detail reader 0x4f83e..0x4f855 (between two fixup'd instructions): same result, but the distance index is
+# clamped to 27, the last own-type low-detail entry (entries 28..31 select structure 0 = the 36-vertex
+# high-detail variant of types 3/6)
+DETAIL_ORIG=bytes.fromhex('c1e202'+'8a440207'+'89c2'+'81e2ff000000'+'8b442420'+'c1e207'+'29f0')
+DETAIL_CLAMP=bytes.fromhex('0fb6549007'+'c1e207'+'8b442420'+'29f0'+'83f81b'+'7e02'+'b01b'+'909090')
+# texture level by block distance: table 0x14708 has 32 entries (+4 zero bytes); `ebp/4` -> min(ebp>>2,31)
+MIP_ORIG=bytes.fromhex('89ea'+'89e8'+'c1fa1f'+'c1e202'+'1bc2'+'c1f802')
+MIP_CLAMP=bytes.fromhex('89e8'+'c1f802'+'83f81f'+'7e02'+'b01f'+'909090')
+# limits: scenery-object vertex buffers (0x4f540/0x51f70/0x549a0, 900 entries; measured over all 17 tracks:
+# 847 at 44 blocks, 919 at 48); on open roads the finish line is 45 blocks before the end of the data; the block
+# ring has 64 slots (window = 5 behind + draw + 2 ahead -> 57) and the block offset table 600 entries
+DRAW_MAX=44
+def far_track(d,draw,SRC,cap=2060):
+    """really raise the track draw distance (blocks). Needs, besides the distance itself:
+    - the streaming window (0x4f0f5: blocks loaded ahead of the car, 30) -> draw+2, otherwise blocks >= car+30 are
+      stale ring slots; the ring has 64 slots
+    - every block from the textured near zone up to draw-1 must be a low-detail one (11 vertices): 0x5a52e and
+      0x5a0b7 compute the vertex base of the near blocks as total-11-(draw-near)*11
+    - the view vertex copy 0x62578 (515 entries, followed by the camera globals) moved to a bigger block
+    - a loader that skips an unreadable block (past the end of an open road) instead of waiting for a key"""
+    assert 28<draw<=DRAW_MAX
+    def put(v,old,new):
+        fo=le.cfo(v); assert d[fo:fo+len(old)]==old,hex(v); assert not any(v+i in SRC for i in range(len(old))),hex(v)
+        d[fo:fo+len(new)]=new
+    I=lambda n:struct.pack('<I',n)
+    # the distance: track load, race start, F key, 0x63304 (each: setting 0 = far), limits
+    for v in (0x4f04e,0x5bbe9,0x48121,0x633e2,0x5b0dd,0x5b1a6,0x5b1c5): put(v,I(28),I(draw))
+    for v in (0x5b0d9,0x5b19e,0x5b1bd): put(v-2,b'\x83\xf8\x1c',bytes((0x83,0xf8,draw)))
+    # the setting [0x4d9d5] has three stages (F key, options menu, saved config): far / medium / near. Make them
+    # draw / 28 (the original far) / the original medium; the original near is dropped
+    for v,old,new in ((0x4812d,14,28),(0x48139,9,14),(0x633f8,14,28),(0x63412,9,14),(0x5bbfa,18,28),(0x5bc0b,13,18)): put(v,I(old),I(new))
+    put(0x4f0f4,b'\xba'+I(30),b'\xba'+I(draw+2))                 # blocks loaded ahead; behind = this + 5
+    put(0x4edf2,bytes.fromhex('e855550300ebc5'),bytes.fromhex('eb129090909090'))   # no 'TRKD' -> return 0
+    put(0x4f83e,DETAIL_ORIG,DETAIL_CLAMP)
+    for v in (0x59d67,0x5a055): put(v,MIP_ORIG,MIP_CLAMP)
+    nb=add_obj4_block(d,cap*12); assert relocate_target(d,0x62578,nb)==4
+    return nb
 def fix_polygon_fillers(d,rows,SRC):
     n=0
     for v,b in stackfix.patches(lambda v:bytes(d[le.cfo(v):le.cfo(v)+4]),rows):
@@ -129,7 +166,7 @@ def build(orig_path,out_path,W=1280,H=960,tag='K',vesa=0x22B,steer=1,lod=1,segs=
     if lod!=1:
         for v in (0x66d5e,0x66d6a,0x66d82): code(v,lambda o:round(o*lod))
     # track draw distance: [0x56618]=28 blocks (set at track load, 0x4f04d); textured near zone = 4 blocks (0x5a500)
-    if draw!=28:
+    if draw<28:   # only the track-load value (overwritten at race start: no effect)
         fo=cfo(0x4f04e); assert struct.unpack_from('<I',d,fo)[0]==0x1c; struct.pack_into('<I',d,fo,draw)
     if near!=4:
         assert d[cfo(0x5a502)]==4 and struct.unpack_from('<I',d,cfo(0x5a506))[0]==4
@@ -140,14 +177,13 @@ def build(orig_path,out_path,W=1280,H=960,tag='K',vesa=0x22B,steer=1,lod=1,segs=
     # Tested: detail=6 OK (incl. Transtropolis); 8 -> stray polygons; 12 -> crash at race start.
     if detail or draw>28:
         assert not detail or detail<=6 or force_detail, 'detail>6 breaks the renderer (vertex indexing limit)'
-        assert draw<=32, 'detail table has 32 entries per track type (extend_detail_table() crashed in testing)'
         for t in range(8):
             fo=dfo(0xE0000+0xd284+t*128); row=list(struct.unpack_from('<32i',d,fo))
             hi,med,lo=row[0],row[3],row[4]; n=detail or 4
             new=[hi]*(n-1)+[med]+[lo]*(28-n)+row[28:]   # entries 28..31 must stay 0 (crash otherwise)
             struct.pack_into('<32i',d,fo,*new)
         # scenery-object window: the engine drops ALL objects once more than 180 are active; the object
-        # vertex buffers (0x4f540 / 0x51f70) hold 900 vertices = 450 objects -> allow 440
+        # vertex buffers (0x4f540 / 0x51f70) hold 900 vertices; 440 was chosen assuming 2 per object (emulation: about 4, see docs/EXE.md)
         fo=cfo(0x597ee); assert struct.unpack_from('<I',d,fo)[0]==0xb4; struct.pack_into('<I',d,fo,440)
         grow_vbuf=True
     # traffic window (0x77f98): per player, from his segment s: spawn at s+front+rand(0..10), recycled outside
@@ -179,6 +215,7 @@ def build(orig_path,out_path,W=1280,H=960,tag='K',vesa=0x22B,steer=1,lod=1,segs=
         log.append(('coltable',hex(grow_obj4_and_move_column_table(d)),fix_polygon_fillers(d,max(1024,(H+255)//256*256),SRC)))
     car_draw_segments(d,segs,cardepth)
     if detail or draw>28 or near>4: grow_track_vertex_buffers(d)
+    if draw>28: log.append(('far_track',draw,hex(far_track(d,draw,SRC))))
     if title:   # title screen with the patch credit line (FRONTEND/(G)ART/TITLEE.QFS)
         for v in (0xe2974,0xe4454):
             fo=dfo(v); assert d[fo:fo+12]==b'title.qfs\0\0\0',hex(v); d[fo:fo+11]=b'titlee.qfs\0'
