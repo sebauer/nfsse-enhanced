@@ -1,5 +1,5 @@
 Unofficial hi-res patch for **The Need for Speed Special Edition** (DOS): races in 1024×768 or
-1280×960, longer view and draw distances, more responsive keyboard steering. The patcher generates
+1280×960, more detail and cars visible further ahead, more responsive keyboard steering. The patcher generates
 everything from your own installation; no game files are included.
 
 **Easiest:** use the [web patcher](https://sebauer.github.io/nfsse-enhanced/) right in your browser, no installation needed.

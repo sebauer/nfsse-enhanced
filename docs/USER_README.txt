@@ -7,8 +7,8 @@ Thirty years after the original, I was tired of barely making out the traffic
 ahead: without a proper CRT monitor, 640x480 on a modern screen turns oncoming
 cars into a few blurry pixels until it is almost too late. So this is a gently
 modernised version that stays true to the retro charm of the 1996 original:
-higher resolution, longer view and draw distances, cars that appear further
-ahead and more responsive keyboard steering. No new artwork, no remastered
+higher resolution, more road and roadside detail in the distance, cars that
+appear further ahead and more responsive keyboard steering. No new artwork, no remastered
 textures: everything is rescaled from the game's own files.
 
 Runs the race in 1024x768 or 1280x960 instead of 640x480. The original NFS.EXE
@@ -132,8 +132,8 @@ Do not mix different executables in network/modem races.
 
 5b. Optional: extended view distance and traffic
 -----------------------------------------------------------------
-- Track drawn 32 blocks ahead instead of 28; detailed road textures (lane
-  markings etc.) over 12 blocks instead of 4.
+- Detailed road textures (lane markings etc.) over 12 blocks instead of 4. The
+  track itself is drawn as far as in the original (28 blocks).
 - Walls and roadside scenery appear from 6 blocks instead of 4 (more is not
   possible without deeper engine changes: 8 gives stray polygons, 12 crashes).
 - Track vertex buffers enlarged 4x and the scenery-object limit raised from

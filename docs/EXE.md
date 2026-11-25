@@ -132,8 +132,11 @@ the limit (release: 80) and replaces the global depth cull `0x5a00` (`0x66d26`; 
 
 ### Optional: track draw distance and detail (`draw`, `near`, `detail`)
 
-- Draw distance `[0x56618]` is set from the immediate at `0x4f04e` (28 blocks). Max 32: the
-  detail table has 32 entries per track type.
+- Draw distance `[0x56618]`: 28 blocks, unchanged in the release. It is set at track load
+  (immediate at `0x4f04e`) and **again at race start** (`0x5bbd3`) from the setting `[0x4d9d5]`:
+  0 → 28 (immediate at `0x5bbe9`), 1 → 18, 2 → 13, via the pending value `[0x16b48]`. Up to v0.9.1
+  (draft of 2026-10-17) `draw=32` only patched the first site and therefore had no effect.
+  See "Draw distance above 28" below.
 - Textured near zone: `cmp`/`mov` at `0x5a502`/`0x5a506` (4 blocks; release: 12).
 - Detail table *data* `0xd284`: 8 track types × 32 dwords, original pattern hi×3, med, lo…;
   **entries 28..31 must stay 0** (crash otherwise). Walls and roadside objects only exist in the
@@ -142,7 +145,8 @@ the limit (release: 80) and replaces the global depth cull `0x5a00` (`0x66d26`; 
   overflow checks → moved to a new block with 4× capacity (`grow_track_vertex_buffers`).
 - Scenery object window cap `0xb4` (180) at `0x597ee` → 440. Above the cap the engine drops
   *all* objects; the object vertex arrays hold 450 objects.
-- An FPS-based auto-detail mechanism exists but is never enabled.
+- An FPS-based adjustment (`0x5b0cc`, `0x5b17c`, limits 8..28) exists, but its flag `[0x622dc]` is only
+  ever cleared (single caller of `0x5b128`).
 
 ### Optional: traffic window (`traffic`)
 
@@ -151,6 +155,33 @@ inner rear `s - 12` (`0x77fbc`), outer front `+11` (`0x7808b`), outer rear `-8` 
 Release: front 50, inner rear 6, outer rear 13 → recycled 19 behind. The police car is placed
 at s−12/s−18, so the rear limit must stay ≥ 19. Six traffic cars (`0x36dd9 mov ecx,6`), only on
 open-road tracks (`[0x4da12] ≤ 2`).
+
+### Draw distance above 28 (research, not in the patch)
+
+Test builds that really raised the value (also `0x5bbe9` and the limits at `0x5b0d9`, `0x5b0dd`,
+`0x5b19e`, `0x5b1a6`, `0x5b1bd`, `0x5b1c5`), Coastal 1, 1280×960:
+
+| Build | Result |
+|---|---|
+| 32 | divide by zero at `0x83cdb` (camera projection, field of view 0) |
+| 29 | starts, broken polygons until the first pause menu, then clean |
+| 30 | divide by zero at `0x83cdb` |
+| 32, entries 28..31 = low detail | `convertshapedepth - SOURCE SHAPE TYPE UNRECOGNIZED ($20)` |
+| 29, with `0x62578` moved | unchanged: broken polygons until the first pause menu |
+| 32 and 32 with low detail, with `0x62578` moved | run, but sometimes broken polygons or `convertshapedepth` ($00, $30) at race start; one screenshot per build from the same spot shows no visibly longer track |
+
+- `0x4ffbc` queues `draw + 1` blocks (the last one with a single row) through `0x4f7d4`. It therefore
+  reads detail entry `draw`, i.e. index 28 is used even at the stock distance.
+- Detail values are indices of 76-byte structures at *data* `0x161d4`, three per track type (type 0:
+  5/6/7, type 3: 0/1/2). The 0 in entries 28..31 selects the high-detail structure of types 3 and 6.
+- `0x59b76` copies the view vertices to `0x62578`, which also holds 515 entries and is followed by the
+  camera globals (`0x63d9c..`, view pointer `0x63df4`). Counted from the tables: at most 427
+  vertices in the stock game, 493 in the release (`detail=6`, 28 blocks), 597..637 at 32 blocks. So the
+  release does not overflow it, but 32 blocks do. It can be moved like the other three buffers
+  (4 fixups).
+- That buffer does not explain everything: at 29 blocks most track types stay below 515, and the
+  remaining errors with the moved buffer are unexplained. Whether a distance limit in the drawing
+  code hides the extra blocks is a guess.
 
 ## Rejected / failed experiments
 

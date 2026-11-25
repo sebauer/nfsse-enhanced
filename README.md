@@ -5,8 +5,8 @@ Unofficial patch for **The Need for Speed Special Edition** (DOS, 1996).
 Thirty years after the original, I was tired of barely making out the traffic ahead: without a
 proper CRT monitor, 640×480 on a modern screen turns oncoming cars into a few blurry pixels until
 it is almost too late. So this is a gently modernised version that stays true to the retro charm
-of the original. Races run in **1024×768** or **1280×960** with longer view and draw distances,
-cars that appear further ahead, a tuned traffic window and more responsive keyboard steering.
+of the original. Races run in **1024×768** or **1280×960** with more road and
+roadside detail in the distance, cars that appear further ahead, a tuned traffic window and more responsive keyboard steering.
 HUD and cockpits are adapted to the new resolution. No new artwork, no remastered textures:
 everything is rescaled from the game's own files.
 
@@ -45,8 +45,8 @@ not mix different executables in network or modem races.
 
 ### 🛣️ View distance and traffic (optional)
 
-- The track is drawn **32** blocks ahead instead of 28; detailed road textures (lane markings and
-  so on) cover **12** blocks instead of 4.
+- Detailed road textures (lane markings and so on) cover **12** blocks instead of 4. The track
+  itself is drawn as far as in the original (28 blocks).
 - Walls and roadside scenery appear from **6** blocks instead of 4. More is not possible without
   deeper engine changes (8 gives stray polygons, 12 crashes).
 - Track vertex buffers are 4× larger, and the scenery limit is raised from 180 to 440 objects
