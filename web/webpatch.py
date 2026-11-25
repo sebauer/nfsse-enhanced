@@ -26,9 +26,9 @@ def check():
     _state.update(exe=exe_bytes,langs=langs)
     return {'ok':True,'variant':variant,'language':(cl or '?').title(),'langs':[l.title() for l in langs],'version':VERSION}
 
-def plan(res,steer,view):
+def plan(res,steer,view,analog='fine'):
     """build the job list; [{'label','files'}] (paths relative to the game folder)"""
-    J=patcher.jobs(GAME,OUT,sorted(res),steer,view,_state['exe'],_state['langs'])
+    J=patcher.jobs(GAME,OUT,sorted(res),steer,view,_state['exe'],_state['langs'],analog)
     for d in {os.path.dirname(os.path.join(OUT,f)) for *_,files in J for f in files}: os.makedirs(d,exist_ok=True)
     _state['jobs']=J
     return [{'label':lab,'files':files} for lab,_,_,files in J]

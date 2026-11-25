@@ -8,7 +8,8 @@ ahead: without a proper CRT monitor, 640x480 on a modern screen turns oncoming
 cars into a few blurry pixels until it is almost too late. So this is a gently
 modernised version that stays true to the retro charm of the 1996 original:
 higher resolution, longer draw distance, more roadside detail, cars that
-appear further ahead and more responsive keyboard steering. No new artwork, no remastered
+appear further ahead, more responsive keyboard steering and finer joystick
+steering. No new artwork, no remastered
 textures: everything is rescaled from the game's own files.
 
 Runs the race in 1024x768 or 1280x960 instead of 640x480. The original NFS.EXE
@@ -54,8 +55,8 @@ folder and delete the unpacked patch folder.
 --------
 NFS1024.EXE     race in 1024x768
 NFS1280.EXE     race in 1280x960
-(by default both include the optional features of sections 5a/5b; the patcher
-options --steer 1 and --view original turn them off)
+(by default both include the optional features of sections 5a-5c; the patcher
+options --steer 1, --view original and --analog original turn them off)
 
 Additional data files (the originals are not modified):
   SIMDATA\MISC\MASKHJ.*, MASKHJG.FSH      HUD / blit masks 1024x768
@@ -130,7 +131,18 @@ testing, but this is not guaranteed for every replay.
 For network and modem races see the known limitations.
 
 
-5b. Optional: extended draw distance, detail and traffic
+5b. Optional: finer joystick / gamepad steering
+-----------------------------------------------
+The original rounds an analog stick to 64 steering steps, so gentle steering
+moves in noticeable jumps. These builds steer smoothly between those steps
+(about 2,600 instead of 64 across the full range), with the same dead zone and
+the same full lock. Replays store the finer steering too (same file size).
+The keyboard is not affected; mouse, network and two-player races keep the
+original steps. Joystick replays recorded with this patch play back slightly
+differently in executables without it.
+
+
+5c. Optional: extended draw distance, detail and traffic
 --------------------------------------------------------
 - Track drawn 44 blocks ahead instead of 28. Press F3 during the race to switch
   between the extended draw distance (44), the original one (28) and the

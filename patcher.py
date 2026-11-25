@@ -2,7 +2,7 @@
 """NFS SE Enhanced patcher: checks a DOS installation of Need for Speed SE and generates the
 hi-res executables and data files next to the originals (which stay untouched).
 
-    python3 patcher.py <game folder> [--res 1024 1280] [--steer 2] [--view extended|original]
+    python3 patcher.py <game folder> [--res 1024 1280] [--steer 2] [--view extended|original] [--analog fine|original]
 """
 import argparse,hashlib,os,shlex,sys,time
 sys.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__file__)),'nfsse'))
@@ -19,6 +19,7 @@ RES={1024:('J',1024,768),1280:('K',1280,960)}   # tag, W, H (1280: VESA mode 0x2
 # draw=44 is the maximum (docs/EXE.md, "Draw distance above 28")
 VIEW={'extended':dict(lod=2,segs=80,cardepth=0x7fff0000,draw=44,near=12,detail=6,traffic=(50,6,13),traffic_cars=7,traffic_active=7),
       'original':dict(lod=1,segs=35,cardepth=None,draw=28,near=4,detail=None,traffic=None)}
+ANALOG={'fine':True,'original':False}   # high-resolution joystick steering (docs/EXE.md)
 LANG={'ENGLISH':('ART','DASH'),'GERMAN':('GART','GDASH')}   # (FRONTEND/<art>, SIMDATA/<dash>)
 
 class Refuse(Exception): pass
@@ -78,7 +79,7 @@ def check_install(game,langs):
 
 # --- jobs: module-level functions so worker processes can run them (spawn on Windows/macOS) ---
 def job_title(game,out): import title; title.build_all(game,out,VERSION)
-def job_exe(exe_bytes,path,W,H,tag,steer,view): import exe; exe.build(exe_bytes,path,W,H,tag,steer=steer,**VIEW[view])
+def job_exe(exe_bytes,path,W,H,tag,steer,view,analog): import exe; exe.build(exe_bytes,path,W,H,tag,steer=steer,analog=ANALOG[analog],**VIEW[view])
 def job_hud(misc_in,tag,W,H,misc_out): import hud; hud.build_all(misc_in,tag,W,H,misc_out)
 def job_masks(misc_in,tag,W,H,misc_out): import masks; masks.build_all(misc_in,tag,W,H,misc_out)
 def job_ticket(misc_in,tag,W,H,misc_out,name): import tickets; tickets.build_all(misc_in,tag,W,H,misc_out,[name])
@@ -92,7 +93,7 @@ def timed(fn,args,i=None):
     if _Q is not None: _Q.put((i,t))
     fn(*args); return time.time()-t
 
-def jobs(game,out,res,steer,view,exe_bytes,langs):
+def jobs(game,out,res,steer,view,exe_bytes,langs,analog='fine'):
     """independent jobs (label, function, args, files written), slowest first; each writes only its own files"""
     misc_in=os.path.join(game,'SIMDATA','MISC')+os.sep; misc_out=os.path.join(out,'SIMDATA','MISC')+os.sep
     J=[]; P=os.path.join
@@ -108,7 +109,7 @@ def jobs(game,out,res,steer,view,exe_bytes,langs):
             J.append((f'screen {n[:-1]+tag} {W}x{H}',job_ticket,(misc_in,tag,W,H,misc_out,n),[P('SIMDATA','MISC',n[:-1]+tag+'.QFS')]))
     for r in sorted(res,reverse=True):
         tag,W,H=RES[r]; name=f'NFS{r}.EXE'
-        J.append((f'{name}',job_exe,(exe_bytes,P(out,name),W,H,tag,steer,view),[name]))
+        J.append((f'{name}',job_exe,(exe_bytes,P(out,name),W,H,tag,steer,view,analog),[name]))
         J.append((f'HUD {W}x{H}',job_hud,(misc_in,tag,W,H,misc_out),[P('SIMDATA','MISC',f'MASKH{tag}{g}.FSH') for g in ('','G')]))
         J.append((f'blit masks {W}x{H}',job_masks,(misc_in,tag,W,H,misc_out),
                   [P('SIMDATA','MISC',f'MASKH{tag}.B{v}{p}') for v in range(3) for p in range(4)]+[P('SIMDATA','MISC',f'MASKH{tag}.MMB')]))
@@ -165,6 +166,8 @@ def ask_options(ui,a):
                                       (4,'4x faster (not recommended: scrubs off too much speed in corners)')],2)
     if a.view is None:
         a.view=ui.choose('Draw distance, detail, car visibility and traffic',[('extended','extended (recommended)'),('original','original')],1)
+    if a.analog is None:
+        a.analog=ui.choose('Joystick / gamepad steering (keyboard is not affected)',[('fine','fine (recommended)'),('original','original (64 steps)')],1)
 
 def clean_path(s):
     """a folder typed or dragged into the terminal: macOS escapes spaces (mac\\ data), Windows adds quotes"""
@@ -188,6 +191,7 @@ def main(argv=None):
     ap.add_argument('--res',type=int,nargs='+',choices=sorted(RES),help='resolution(s) to build (default: both)')
     ap.add_argument('--steer',type=int,choices=(1,2,3,4),help='keyboard steering speed factor, 1 = original (default: 2)')
     ap.add_argument('--view',choices=sorted(VIEW),help='extended draw distance, detail, car visibility and traffic window, or original (default: extended)')
+    ap.add_argument('--analog',choices=sorted(ANALOG),help='joystick/gamepad steering: fine (smooth, stored in replays) or original 64 steps (default: fine)')
     ap.add_argument('-y','--yes',action='store_true',help='do not ask: use the defaults for options not given')
     ap.add_argument('--check',action='store_true',help='only check the installation, write nothing')
     ap.add_argument('--jobs',type=int,default=default_workers(),help=f'parallel jobs (default: half the CPU cores, here {default_workers()})')
@@ -214,11 +218,11 @@ def main(argv=None):
     ui.info('Language',f'{(cl or "?").title()} (NFS.CFG); generating for: {", ".join(l.title() for l in langs)}')
     ui.ok('Game installation verified')
     if a.check: return 0
-    interactive=not a.yes and sys.stdin.isatty(); asked=interactive and None in (a.res,a.steer,a.view)
+    interactive=not a.yes and sys.stdin.isatty(); asked=interactive and None in (a.res,a.steer,a.view,a.analog)
     try:
         if asked: ask_options(ui,a)
-        res=sorted(set(a.res or RES)); a.steer=a.steer or 2; a.view=a.view or 'extended'
-        J=jobs(game,out,res,a.steer,a.view,exe_bytes,langs); w=max(1,min(a.jobs,len(J)))
+        res=sorted(set(a.res or RES)); a.steer=a.steer or 2; a.view=a.view or 'extended'; a.analog=a.analog or 'fine'
+        J=jobs(game,out,res,a.steer,a.view,exe_bytes,langs,a.analog); w=max(1,min(a.jobs,len(J)))
         existing=[f for *_,files in J for f in files if os.path.exists(os.path.join(out,f))]
         if existing:
             if not asked: ui.p()
@@ -228,7 +232,7 @@ def main(argv=None):
     except (KeyboardInterrupt,EOFError):
         ui.p(); ui.error('aborted, nothing written'); return 130
     ui.p(); ui.head('Building '+' and '.join(f'{RES[r][1]}x{RES[r][2]}' for r in res)+f' ({sum(len(j[3]) for j in J)} files, {w} parallel processes)')
-    ui.info('Options',f'keyboard steering x{a.steer}, view {a.view}')
+    ui.info('Options',f'keyboard steering x{a.steer}, view {a.view}, joystick steering {a.analog}')
     if out!=game: ui.info('Output',out)
     for d in {os.path.dirname(os.path.join(out,f)) for *_,files in J for f in files}: os.makedirs(d,exist_ok=True)
     t=time.time(); made=generate(J,w,ui)

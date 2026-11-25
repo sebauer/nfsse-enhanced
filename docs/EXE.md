@@ -23,7 +23,8 @@ produce byte-identical (tested) executables.
 
 - DOS stub + **LE** executable (DOS4GW). LE header at file offset `0x2c80`.
 - Object 1 (code): vaddr `0x10000`; file offset = `0x3c600 + v - 0x10000` (`le.cfo`).
-  Slack at the end of obj1: `0xba9fd..0xbb000` (0x603 bytes, zero, currently unused).
+  Slack at the end of obj1: `0xba9fd..0xbb000` (0x603 bytes, zero). `analog` uses `0xbaa80..0xbae56` and raises
+  the obj1 virtual size to `0xab000` (whole last page); `0xbaa00` belongs to the disabled `extend_detail_table`.
 - Object 4 (data): vaddr `0xE0000 + raw`; file offset = `0xE9600 + v - 0xE0000` (`le.dfo`).
   Virtual size `0x89a10`; the initial stack top equals it. Zero-initialised memory can be
   appended above it (`exe.add_obj4_block`).
@@ -115,6 +116,30 @@ Tags: `J` = 1024×768, `K` = 1280×960.
 at `+0x300` (4 for every car) × a speed factor. `steer=2` replaces the three loads
 (`0x4840b`, `0x4841d`, `0x48425`) with `mov edi, 4*steer`. 2× was chosen in testing; 3×/4× scrub
 too much speed in corners.
+
+### Optional: joystick steering resolution (`analog`)
+
+The joystick reader `0x4e0b8` scales raw X to a step of −32..31 (`(range+1)/35` raw counts per step, 3 steps
+dead zone), `0x48bec` packs it into the 6 steering bits of the 16-bit control word (all 16 bits are used), and
+`0x4853c` maps the step to an angle through the table `0xec538` (0.2–1.5° per step). The rate limiter takes most
+steps in one physics step, which is the visible and noticeable jump. `analog=True` (patcher default `--analog fine`)
+carries the position inside the step next to the control word and interpolates between neighbouring table values:
+4096 positions per step, monotone, same dead zone, full lock at the same raw value, never more than one step away
+from the original stair (stretched by 31/30 resp. 32/31 so both ends stay continuous). Only for the local player
+with steering device 1 (joystick) on a single machine; keyboard (`0x483e4`), mouse, network and two-human games are
+unchanged. Details, entry format and all patch sites: docstring of `exe.analog_steering`.
+
+- Producer: `0x4e174`/`0x4e1a4` keep the product before the shift, `0x48c10` wraps the reader call, `0x49035`
+  stores the entry in a 64-entry ring parallel to the control word ring (same index).
+- Consumer: `0x494d0` clears the current entry, `0x49554` takes the ring entry with the word, `0x48544` jumps to the
+  interpolation (back at `0x4856e`, rate limiter unchanged). Init: `0x47c6d`, `0x6388e`.
+- Replays: with one human, player 1's control word streams (`0x1c20`, `0x5460` in the buffer `[0xf6b98]`) and key
+  frames are unused. The recorder (`0x5da42`, `0x5dab1`) stores the 16-bit packed value there and the magic
+  `NFSEANA1` at buffer+`0x8ac0`; the reader (`0x5dc7d`) uses it only with that magic and one human. The magic is
+  cleared at allocation (`0x5dde4`). File size unchanged. Old replays, keyboard/mouse recordings and two-human
+  replays play exactly as before; a joystick replay from an `analog` EXE plays back slightly differently (up to
+  about 3°) in an EXE without it.
+- Verified byte-for-byte and in Unicorn emulation (relocated); tested in game (live, replay, keyboard).
 
 ### Optional: car level of detail (`lod`)
 

@@ -2,7 +2,7 @@
 //   {type:'init', base}              load Pyodide, numpy/scipy/Pillow and the patcher sources
 //   {type:'files', files, dirs}      copy game files [{path, data}] into the in-memory game folder
 //   {type:'check'}                   verify the installation
-//   {type:'plan', res, steer, view}  build the job list
+//   {type:'plan', res, steer, view, analog}  build the job list
 //   {type:'run', jobs}               run jobs (indices into the plan); posts 'start' and 'done' (with files)
 // Every reply carries the request id; errors come back as {type:'error', message}.
 const PYODIDE = 'https://cdn.jsdelivr.net/pyodide/v0.29.3/full/';
@@ -48,8 +48,8 @@ const handlers = {
   },
   check() { return api.check().toJs({ dict_converter: Object.fromEntries }); },
   notes({ res }) { return api.notes(py.toPy(res)); },
-  plan({ res, steer, view }) {
-    plan = api.plan(py.toPy(res), steer, view).toJs({ dict_converter: Object.fromEntries });
+  plan({ res, steer, view, analog }) {
+    plan = api.plan(py.toPy(res), steer, view, analog).toJs({ dict_converter: Object.fromEntries });
     return plan;
   },
   run({ jobs }, id) {

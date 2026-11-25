@@ -273,8 +273,9 @@ async function main() {
   const steer = await choose('Keyboard steering (joystick/wheel are not affected)', [[1, 'original'], [2, '2x faster (recommended)'],
     [3, '3x faster (not recommended: scrubs off too much speed in corners)'], [4, '4x faster (not recommended: scrubs off too much speed in corners)']], 2);
   const view = await choose('Draw distance, detail, car visibility and traffic', [['extended', 'extended (recommended)'], ['original', 'original']], 1);
+  const analog = await choose('Joystick / gamepad steering (keyboard is not affected)', [['fine', 'fine (recommended)'], ['original', 'original (64 steps)']], 1);
 
-  const plan = await first.call('plan', { res, steer, view });
+  const plan = await first.call('plan', { res, steer, view, analog });
   const total = plan.reduce((n, j) => n + j.files.length, 0);
   let existing = 0;
   for (const j of plan) for (const f of j.files) if (await src.exists(f)) existing++;
@@ -284,7 +285,7 @@ async function main() {
   // workers: the first one is ready; the others load in the background and join when ready
   const nworkers = Math.max(1, Math.min(MAX_WORKERS, Math.floor((navigator.hardwareConcurrency || 2) / 2), plan.length));
   blank(); head(`Building ${res.map(r => r === 1024 ? '1024x768' : '1280x960').join(' and ')} (${total} files, ${nworkers} parallel worker${nworkers > 1 ? 's' : ''})`);
-  info('Options', `keyboard steering x${steer}, view ${view}`);
+  info('Options', `keyboard steering x${steer}, view ${view}, joystick steering ${analog}`);
   const guard = e => { e.preventDefault(); e.returnValue = ''; };
   window.addEventListener('beforeunload', guard);
   const pr = progress(plan);
@@ -304,7 +305,7 @@ async function main() {
   async function extra() {
     const w = new PyWorker();
     try {   // a worker that cannot start (e.g. not enough memory) just does not help
-      await w.call('init', { base: BASE.href }); await w.call('files', game); await w.call('check'); await w.call('plan', { res, steer, view });
+      await w.call('init', { base: BASE.href }); await w.call('files', game); await w.call('check'); await w.call('plan', { res, steer, view, analog });
     } catch (e) { console.warn('extra worker not available:', e); w.terminate(); return; }
     try { await work(w); } finally { w.terminate(); }
   }

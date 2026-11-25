@@ -6,8 +6,8 @@ Thirty years after the original, I was tired of barely making out the traffic ah
 proper CRT monitor, 640×480 on a modern screen turns oncoming cars into a few blurry pixels until
 it is almost too late. So this is a gently modernised version that stays true to the retro charm
 of the original. Races run in **1024×768** or **1280×960** with a longer draw distance, more road
-and roadside detail, cars that appear further ahead, a tuned traffic window and more responsive keyboard
-steering.
+and roadside detail, cars that appear further ahead, a tuned traffic window, more responsive keyboard
+steering and finer joystick steering.
 HUD and cockpits are adapted to the new resolution. No new artwork, no remastered textures:
 everything is rescaled from the game's own files.
 
@@ -43,6 +43,15 @@ build-up rate (and the return to centre). Joystick and wheel are not affected.
 4× feel quicker but scrub off noticeably more speed in corners. Replays recorded with the
 original steering played back fine in testing, but this is not guaranteed for every replay. For network
 and modem races see the known limitations.
+
+### 🕹️ Joystick and gamepad steering (optional)
+
+The original rounds an analog stick to 64 steering steps, so gentle steering moves in noticeable jumps.
+The default build steers smoothly between those steps (about 2,600 instead of 64 across the full range), with the
+same dead zone and the same full lock. Replays store the finer steering too, without changing the file size.
+Keyboard steering is not affected; mouse, network and two-player races keep the original steps.
+Joystick replays recorded with this patch play back slightly differently in executables without it.
+`--analog original` turns it off.
 
 ### 🛣️ Draw distance, detail and traffic (optional)
 
@@ -102,8 +111,8 @@ minimum because macOS still ships it).
 - **macOS / Linux:** `sh nfsse-patcher.sh` in the unpacked folder.
 
 The first run sets up a private Python environment (`.venv` next to the launcher; numpy, scipy,
-Pillow). The patcher then asks for the game folder, resolution(s), keyboard steering and draw
-distance, writes the new files next to the originals and prints the DOSBox-X settings.
+Pillow). The patcher then asks for the game folder, resolution(s), keyboard steering, draw
+distance and joystick steering, writes the new files next to the originals and prints the DOSBox-X settings.
 [`docs/USER_README.txt`](docs/USER_README.txt) (`README.txt` in the zip) has the details.
 
 ### 🐍 From source
@@ -112,12 +121,13 @@ distance, writes the new files next to the originals and prints the DOSBox-X set
 python3 -m pip install -r requirements.txt
 python3 patcher.py                                       # asks for everything
 python3 patcher.py "<game folder>" -y                    # both resolutions, release options
-python3 patcher.py "<game folder>" --res 1280 --steer 1   # 1280x960 only, original steering
+python3 patcher.py "<game folder>" --res 1280 --steer 1   # 1280x960 only, original keyboard steering
 python3 patcher.py "<game folder>" --check                # only check the installation
 ```
 
 Options: `--res 1024 1280`, `--steer 1..4` (keyboard steering factor, default 2),
 `--view extended|original` (draw distance, detail, car visibility, traffic window; default extended),
+`--analog fine|original` (joystick/gamepad steering resolution; default fine),
 `-y` (no questions, defaults for options not given), `--jobs N` (parallel jobs, default half the
 CPU cores), `--out DIR` (write elsewhere, for testing). The patcher verifies `NFS.EXE` (both known
 variants, see `docs/EXE.md`), checks that the installation is complete, builds cockpits and the
