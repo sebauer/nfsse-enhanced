@@ -202,8 +202,7 @@ Emulated (scratch scripts, not in the repo): the game's own streaming + queueing
 track with the built EXEs (no stale slot inside the track, 11 vertices for every block >= 12, counts above) and
 its polygon emission `0x5a4f0` with stubbed draw calls: 10 flat polygons per block for every distance 12..draw-1,
 texture level 3 from distance 21 on. Nothing in `0x59d3c` limits the distance; the projection `0x94c80`
-normalises z. In game: a 44-block build (1280×960, stages not yet changed) ran fine in Sebastian's test; the
-latest stage change and 1024×768 are untested.
+normalises z. Tested in game with 44 blocks and the stages 44/28/medium.
 
 ## Rejected / failed experiments
 
