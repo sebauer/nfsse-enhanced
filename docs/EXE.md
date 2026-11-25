@@ -161,6 +161,50 @@ Release: front 50, inner rear 6, outer rear 13 → recycled 19 behind. The polic
 at s−12/s−18, so the rear limit must stay ≥ 19. Six traffic cars (`0x36dd9 mov ecx,6`), only on
 open-road tracks (`[0x4da12] ≤ 2`).
 
+### Track rendering internals
+
+Read from the code unless marked otherwise. A block is 4 track segments. Addresses in brackets are *data*.
+
+**Per frame** (around `0x5bd00`..`0x5bf31`):
+
+| Step | Function |
+|---|---|
+| apply a pending draw distance (`[0x16b48]`, -1 = none) and invalidate the block list | `0x5bcf5`, `0x5004c` (sets `[0x56610]` and `[0x56614]` to -1) |
+| load blocks around the car; requeue if the car's block changed or the list is invalid | `0x50070` (calls `0x4ee30`, then `0x4ffbc`) |
+| queue `draw + 1` blocks: `draw - 1` with 4 rows, one more with 4 rows, one with a single row | `0x4ffbc` → `0x4f7d4` per block |
+| transform the queued vertices; copy them to `0x62578` and clamp the near ones | `0x59a74` (copy at `0x59b76`) |
+| draw: far, flat blocks from the back to the near zone, then the textured near zone | `0x5a4f0`, far part `0x59d3c` |
+
+The detail index of a block is its distance from the car, so `0x4f7d4` also reads entry `draw` of the
+detail table (index 28 at the stock distance).
+
+**Data:**
+
+| Address | Content |
+|---|---|
+| `[0x57430]` | segment table, 36 bytes per segment; byte +7 of a block's first segment = track type (row of the detail table) |
+| `[0x5bb88]`, `[0x5bb90]` | masks for segment and block numbers |
+| `[0x565e8]` | decoded block ring: 64 slots of 540 bytes = 12-byte header + 4 rows of 11 vertices of 12 bytes; slot = block mod 64 |
+| `[0x565ec]`, `[0x565f8]`, `[0x565f4]` | streaming state; blocks ahead (30); that + 5 |
+| `0x56604`, `0x56608` | pointers to the packed track data and its block table (per-block offsets from +0x2c; loader at `0x4edbe`) |
+| `[0x5bb74]` / `[0x5bb78]` | write index / total of the queued track vertices |
+| `0x56620` | 6 bytes per block: detail value u8 (+0), first vertex u16 (+2), vertex count u16 (+4); written at `0x4fe94` |
+| `[0x565c4]`, `[0x565c0]` | scenery object vertex and object counters (buffers `0x4f540`/`0x51f70`/`0x549a0`) |
+| `0x60cd8` | texture pointers, indexed by the ids in the block headers (header use: from emulation) |
+| `0x61ed8` | 256 pointers, read only (looks like a per-vertex buffer, but is not) |
+| `[0x63df4]` | current view object; first dword = field of view, halved and passed to `0x83c5b` |
+
+**Detail structures:** the values of the detail table (*data* `0xd284`) index 76-byte structures at `0x161d4`,
+three per track type: hi/med/lo = 5/6/7 (type 0), 13/14/15 (1), 8/9/10 (2), 0/1/2 (3 and 6), 4/11/12 (4 and 5),
+16/17/18 (7). They start with one list of vertex indices per row, each ended by `0xff`. Low detail has 11 vertices
+per block, high detail 36 (types 4, 5 and 7: 44).
+
+Track vertices per frame, counted from these lists (515 fit into the original buffers):
+
+| Stock, 28 blocks | `detail=6`, 28 blocks | `detail=6`, 32 blocks, entries 28..31 = 0 |
+|---|---|---|
+| 403..427 | 453..493 | 597..637 |
+
 ### Draw distance above 28 (`draw` > 28, `exe.far_track`)
 
 Why raising `[0x56618]` alone fails (static reading, confirmed with the Unicorn harness on the real track files):
@@ -181,6 +225,18 @@ Why raising `[0x56618]` alone fails (static reading, confirmed with the Unicorn 
    "clean after the first pause menu" most likely meant: back at 28 (which of the two runs after the pause menu
    was not traced).
 5. Texture level by block distance: table `0x14708` has 32 entries (readers `0x59d76`, `0x5a068`).
+
+Symptoms seen in the game while the causes were unknown (Coastal 1, 1280×960), useful for recognising them:
+
+| Build | Result | Matches |
+|---|---|---|
+| 29 blocks | starts, huge stretched terrain near the camera until the first pause menu | 2, 4 |
+| 30 and 32 blocks | divide by zero at `0x83cdb` (view object overwritten, field of view 0) | 3 |
+| 32, entries 28..31 = own low detail | `convertshapedepth - SOURCE SHAPE TYPE UNRECOGNIZED ($20)` | 1 |
+| 29, only `0x62578` moved | same as 29 | 2, 4 |
+| 32 (both variants), only `0x62578` moved | runs, sometimes broken polygons or `convertshapedepth` ($00, $30) at race start | 1, 2 |
+
+The matches are conclusions from the analysis, the individual crashes were not traced in a debugger.
 
 `far_track(d, draw)` therefore patches: all distance immediates (`0x4f04e`, `0x5bbe9`, `0x48121`, `0x633e2`,
 limits `0x5b0d9/dd`, `0x5b19e/1a6`, `0x5b1bd/1c5`); the window `0x4f0f5` = `draw + 2`; the detail reader
